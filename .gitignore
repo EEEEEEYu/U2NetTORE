@@ -1,0 +1,5 @@
+.DS_STORE
+frames/
+mask/
+lightning_logs/
+.__pycache__/
