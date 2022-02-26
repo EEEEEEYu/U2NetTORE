@@ -54,6 +54,9 @@ class ModelInterface(pl.LightningModule):
         _, loss = muti_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, mask)
         self.log('val_loss', loss, on_epoch=True)
 
+    def validation_epoch_end(self, output):
+        print("Epoch finished")
+
     def test_step(self, batch, batch_idx):
         img, mask = batch
         d0, d1, d2, d3, d4, d5, d6 = self.model(img)
