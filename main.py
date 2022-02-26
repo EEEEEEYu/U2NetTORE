@@ -121,14 +121,10 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=1e-3, type=float)
     parser.add_argument('--gpus', default=1 if torch.cuda.is_available() else 0, type=int)
 
-    # LR Scheduler
-    parser.add_argument('--lr_scheduler', choices=['step', 'cosine'], type=str)
-    parser.add_argument('--lr_decay_steps', default=20, type=int)
-    parser.add_argument('--lr_decay_rate', default=0.5, type=float)
-    parser.add_argument('--lr_decay_min_lr', default=1e-5, type=float)
-
     # logger
     parser.add_argument('--log_dir', default='logs/', type=str)
+    parser.add_argument('--check_val_every_n_epoch', default=1, type=int)
+    parser.add_argument('--max_epochs', default=100, type=int)
 
     # Model hyperparams
     parser.add_argument('--in_channel', default=3, type=int)
@@ -137,8 +133,6 @@ if __name__ == '__main__':
     # Dataset
     parser.add_argument('--img_dir', default='frames/', type=str)
     parser.add_argument('--mask_dir', default='frames/', type=str)
-
-    parser.set_defaults(max_epohcs=100)
 
     args = parser.parse_args()
 
