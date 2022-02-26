@@ -9,8 +9,8 @@ def generate(frames_dir, mask_dir, size=128):
 
 
 def main():
-    frames_dir = 'frames'
-    mask_dir = 'mask'
+    frames_dir = './frames'
+    mask_dir = './mask'
     generate(frames_dir, mask_dir)
 
 

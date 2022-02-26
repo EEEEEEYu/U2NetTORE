@@ -1,8 +1,8 @@
 from torchvision.transforms import ToTensor
 from torch.utils.data import Dataset, random_split, DataLoader
-from torchvision.io import read_image, ImageReadMode
+from torchvision.io import read_image
+from torchvision.io.image import ImageReadMode
 import pytorch_lightning as pl
-import torch
 import os
 
 
