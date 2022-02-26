@@ -75,7 +75,7 @@ def main(args):
     # ------------
     logger = TensorBoardLogger(save_dir=args.log_dir)
     args.logger = logger
-    args.callbacks = ModelCheckpoint(dirpath='checkpoint', monitor="val_loss")
+    args.callbacks = [ModelCheckpoint(dirpath='checkpoint', monitor="val_loss")]
 
     print("Logs set up complete!")
 
