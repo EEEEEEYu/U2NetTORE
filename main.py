@@ -1,139 +1,106 @@
-from argparse import ArgumentParser
-
-from pytorch_lightning import Trainer
-
-from model import U2NET
-import torch
-import torch.nn as nn
+import os
 import pytorch_lightning as pl
-from dataloader import DataInterface
+from argparse import ArgumentParser
+from pytorch_lightning import Trainer
+import pytorch_lightning.callbacks as plc
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
+
+from model import ModelInteface
+from data import DataInterface
+from utils import load_model_path_by_args
 
 
-def muti_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
-    bce_loss = nn.BCELoss(size_average=True)
-    loss0 = bce_loss(d0, labels_v)
-    loss1 = bce_loss(d1, labels_v)
-    loss2 = bce_loss(d2, labels_v)
-    loss3 = bce_loss(d3, labels_v)
-    loss4 = bce_loss(d4, labels_v)
-    loss5 = bce_loss(d5, labels_v)
-    loss6 = bce_loss(d6, labels_v)
+def load_callbacks():
+    callbacks = []
+    callbacks.append(plc.EarlyStopping(
+        monitor='val_acc',
+        mode='max',
+        patience=10,
+        min_delta=0.001
+    ))
 
-    loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5 + loss6
+    callbacks.append(plc.ModelCheckpoint(
+        monitor='val_acc',
+        filename='best-{epoch:02d}-{val_acc:.3f}',
+        save_top_k=1,
+        mode='max',
+        save_last=True
+    ))
 
-    return loss0, loss
-
-
-class ModelInterface(pl.LightningModule):
-    def __init__(self, model, learning_rate=1e-3):
-        super().__init__()
-        self.save_hyperparameters()
-        self.model = model
-
-    def forward(self, x):
-        # use forward for inference/predictions
-        print(x.shape)
-        mask, _ = self.model(x)
-        print(mask.shape)
-        return mask
-
-    def training_step(self, batch, batch_idx):
-        img, mask = batch
-        d0, d1, d2, d3, d4, d5, d6 = self.model(img)
-
-        _, loss = muti_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, mask)
-        self.log('train_loss', loss, on_epoch=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        img, mask = batch
-        d0, d1, d2, d3, d4, d5, d6 = self.model(img)
-
-        _, loss = muti_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, mask)
-        self.log('val_loss', loss, on_epoch=True)
-
-    def validation_epoch_end(self, output):
-        print("Epoch finished")
-
-    def test_step(self, batch, batch_idx):
-        img, mask = batch
-        d0, d1, d2, d3, d4, d5, d6 = self.model(img)
-
-        _, loss = muti_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, mask)
-        self.log('test_loss', loss, on_epoch=True)
-
-    def configure_optimizers(self):
-        # self.hparams available because we called self.save_hyperparameters()
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-        return optimizer
+    if args.lr_scheduler:
+        callbacks.append(plc.LearningRateMonitor(
+            logging_interval='epoch'))
+    return callbacks
 
 
 def main(args):
     pl.seed_everything(args.seed)
+    load_path = load_model_path_by_args(args)
+    data_module = DataInterface(**vars(args))
 
-    # ------------
-    # logs and checkpoint
-    # ------------
-    logger = TensorBoardLogger(save_dir=args.log_dir)
-    args.logger = logger
-    args.callbacks = [ModelCheckpoint(dirpath='checkpoint', monitor="val_loss")]
+    if load_path is None:
+        model = ModelInteface(**vars(args))
+    else:
+        model = ModelInteface(**vars(args))
+        args.resume_from_checkpoint = load_path
 
-    print("Logs set up complete!")
+    # # If you want to change the logger's saving folder
+    # logger = TensorBoardLogger(save_dir='kfold_log', name=args.log_dir)
+    # args.callbacks = load_callbacks()
+    # args.logger = logger
 
-    # ------------
-    # data
-    # ------------
-    dataset = DataInterface(args.img_dir, args.mask_dir, args.batch_size)
-
-    print("Dataloader ready!")
-
-    # ------------
-    # model
-    # ------------
-    model = ModelInterface(U2NET(args.in_channel, args.out_channel), args.lr)
-
-    print("Model instantiated!")
-
-    # ------------
-    # training
-    # ------------
-    trainer = pl.Trainer.from_argparse_args(args)
-    trainer.fit(model, dataset)
-
-    print("Training complete!")
-
-    # ------------
-    # testing
-    # ------------
-    result = trainer.test()
-    print("Testing complete!")
-    print(result)
+    trainer = Trainer.from_argparse_args(args)
+    trainer.fit(model, data_module)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    # Training params
+    # Basic Training Control
     parser.add_argument('--batch_size', default=32, type=int)
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--gpus', default=1 if torch.cuda.is_available() else 0, type=int)
 
-    # logger
-    parser.add_argument('--log_dir', default='logs/', type=str)
-    parser.add_argument('--check_val_every_n_epoch', default=1, type=int)
-    parser.add_argument('--max_epochs', default=100, type=int)
+    # LR Scheduler
+    parser.add_argument('--lr_scheduler', choices=['step', 'cosine'], type=str)
+    parser.add_argument('--lr_decay_steps', default=20, type=int)
+    parser.add_argument('--lr_decay_rate', default=0.5, type=float)
+    parser.add_argument('--lr_decay_min_lr', default=1e-5, type=float)
 
-    # Model hyperparams
+    # Restart Control
+    parser.add_argument('--load_best', action='store_true')
+    parser.add_argument('--load_dir', default=None, type=str)
+    parser.add_argument('--load_ver', default=None, type=str)
+    parser.add_argument('--load_v_num', default=None, type=int)
+
+    # Training Info
+    parser.add_argument('--dataset', default='standard_data', type=str)
+    parser.add_argument('--data_dir', default='ref/data', type=str)
+    parser.add_argument('--model_name', default='standard_net', type=str)
+    parser.add_argument('--loss', default='bce', type=str)
+    parser.add_argument('--weight_decay', default=1e-5, type=float)
+    parser.add_argument('--no_augment', action='store_true')
+    parser.add_argument('--log_dir', default='lightning_logs', type=str)
+
+    # Model Hyperparameters
+    parser.add_argument('--hid', default=64, type=int)
+    parser.add_argument('--block_num', default=8, type=int)
     parser.add_argument('--in_channel', default=3, type=int)
-    parser.add_argument('--out_channel', default=1, type=int)
+    parser.add_argument('--layer_num', default=5, type=int)
 
-    # Dataset
-    parser.add_argument('--img_dir', default='frames/', type=str)
-    parser.add_argument('--mask_dir', default='frames/', type=str)
+    # Other
+    parser.add_argument('--aug_prob', default=0.5, type=float)
+
+    parser = Trainer.add_argparse_args(
+        parser.add_argument_group(title="pl.Trainer args"))
+
+    # Reset Some Default Trainer Arguments' Default Values
+    parser.set_defaults(max_epochs=100)
 
     args = parser.parse_args()
+
+    # List Arguments
+    args.mean_sen = [0.485, 0.456, 0.406]
+    args.std_sen = [0.229, 0.224, 0.225]
 
     main(args)

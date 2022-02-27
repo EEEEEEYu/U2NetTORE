@@ -29,7 +29,7 @@ class MaskDataset(Dataset):
 
         return image, mask
 
-
+"""
 class DataInterface(pl.LightningDataModule):
     def __init__(self, img_dir, mask_dir, batch_size, transform=ToTensor, mask_transform=ToTensor):
         super().__init__()
@@ -50,4 +50,4 @@ class DataInterface(pl.LightningDataModule):
         return DataLoader(self.val_set, batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return DataLoader(self.test_set, batch_size=self.batch_size)
+        return DataLoader(self.test_set, batch_size=self.batch_size)"""
