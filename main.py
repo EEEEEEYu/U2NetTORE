@@ -1,9 +1,9 @@
-import os
 import pytorch_lightning as pl
 from argparse import ArgumentParser
+
+import torch.cuda
 from pytorch_lightning import Trainer
 import pytorch_lightning.callbacks as plc
-from pytorch_lightning.loggers import TensorBoardLogger
 
 from model import ModelInteface
 from data import DataInterface
@@ -59,6 +59,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
+    parser.add_argument('--gpu', default=1 if torch.cuda.is_available() else 0, type=int)
 
     # LR Scheduler
     parser.add_argument('--lr_scheduler', choices=['step', 'cosine'], type=str)
