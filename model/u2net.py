@@ -313,10 +313,10 @@ class RSU4F(nn.Module):  # UNet04FRES(nn.Module):
 
 
 ##### U^2-Net ####
-class U2NET(nn.Module):
+class U2net(nn.Module):
 
-    def __init__(self, in_ch=3, out_ch=1):
-        super(U2NET, self).__init__()
+    def __init__(self, in_ch=6, out_ch=1):
+        super(U2net, self).__init__()
 
         self.stage1 = RSU7(in_ch, 32, 64)
         self.pool12 = nn.MaxPool2d(2, stride=2, ceil_mode=True)

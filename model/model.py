@@ -1,14 +1,31 @@
 import inspect
 import torch
 import importlib
-from torch.nn import functional as F
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim.lr_scheduler as lrs
 
 import pytorch_lightning as pl
 
+bce_loss = nn.BCELoss(size_average=True)
+
+
+def multi_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
+    loss0 = bce_loss(d0, labels_v)
+    loss1 = bce_loss(d1, labels_v)
+    loss2 = bce_loss(d2, labels_v)
+    loss3 = bce_loss(d3, labels_v)
+    loss4 = bce_loss(d4, labels_v)
+    loss5 = bce_loss(d5, labels_v)
+    loss6 = bce_loss(d6, labels_v)
+
+    loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5 + loss6
+
+    return loss0, loss
+
 
 class ModelInteface(pl.LightningModule):
-    def __init__(self, model_name, loss, lr, **kargs):
+    def __init__(self, model_name, loss, lr, **kwargs):
         super().__init__()
         self.save_hyperparameters()
         self.load_model()
@@ -19,25 +36,17 @@ class ModelInteface(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         img, labels, filename = batch
-        out = self(img)
-        loss = self.loss_function(out, labels)
+        d0, d1, d2, d3, d4, d5, d6 = self(img)
+        _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
         self.log('loss', loss, on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        img, labels, filename = batch
-        out = self(img)
-        loss = self.loss_function(out, labels)
-        label_digit = labels.argmax(axis=1)
-        out_digit = out.argmax(axis=1)
-
-        correct_num = sum(label_digit == out_digit).cpu().item()
+        img, labels = batch
+        d0, d1, d2, d3, d4, d5, d6 = self(img)
+        _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
 
         self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_acc', correct_num/len(out_digit),
-                 on_step=False, on_epoch=True, prog_bar=True)
-
-        return (correct_num, len(out_digit))
 
     def test_step(self, batch, batch_idx):
         # Here we just reuse the validation_step for testing
@@ -72,14 +81,7 @@ class ModelInteface(pl.LightningModule):
 
     def configure_loss(self):
         loss = self.hparams.loss.lower()
-        if loss == 'mse':
-            self.loss_function = F.mse_loss
-        elif loss == 'l1':
-            self.loss_function = F.l1_loss
-        elif loss == 'bce':
-            self.loss_function = F.binary_cross_entropy
-        else:
-            raise ValueError("Invalid Loss Type!")
+        self.loss_function = multi_bce_loss_fusion
 
     def load_model(self):
         name = self.hparams.model_name
@@ -89,7 +91,7 @@ class ModelInteface(pl.LightningModule):
         camel_name = ''.join([i.capitalize() for i in name.split('_')])
         try:
             Model = getattr(importlib.import_module(
-                '.'+name, package=__package__), camel_name)
+                '.' + name, package=__package__), camel_name)
         except:
             raise ValueError(
                 f'Invalid Module File Name or Invalid Class Name {name}.{camel_name}!')

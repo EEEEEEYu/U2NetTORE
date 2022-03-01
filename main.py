@@ -13,17 +13,16 @@ from utils import load_model_path_by_args
 def load_callbacks():
     callbacks = []
     callbacks.append(plc.EarlyStopping(
-        monitor='val_acc',
-        mode='max',
-        patience=10,
-        min_delta=0.001
+        monitor='val_loss',
+        mode='min',
+        patience=10
     ))
 
     callbacks.append(plc.ModelCheckpoint(
-        monitor='val_acc',
-        filename='best-{epoch:02d}-{val_acc:.3f}',
+        monitor='val_loss',
+        filename='best-{epoch:02d}-{val_loss:.6f}',
         save_top_k=1,
-        mode='max',
+        mode='min',
         save_last=True
     ))
 
@@ -74,33 +73,17 @@ if __name__ == '__main__':
     parser.add_argument('--load_v_num', default=None, type=int)
 
     # Training Info
-    parser.add_argument('--dataset', default='standard_data', type=str)
+    parser.add_argument('--dataset', default='mask_dataset', type=str)
     parser.add_argument('--data_dir', default='ref/data', type=str)
-    parser.add_argument('--model_name', default='standard_net', type=str)
+    parser.add_argument('--model_name', default='u2net', type=str)
     parser.add_argument('--loss', default='bce', type=str)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--no_augment', action='store_true')
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
 
-    # Model Hyperparameters
-    parser.add_argument('--hid', default=64, type=int)
-    parser.add_argument('--block_num', default=8, type=int)
-    parser.add_argument('--in_channel', default=3, type=int)
-    parser.add_argument('--layer_num', default=5, type=int)
-
-    # Other
-    parser.add_argument('--aug_prob', default=0.5, type=float)
-
-    parser = Trainer.add_argparse_args(
-        parser.add_argument_group(title="pl.Trainer args"))
-
     # Reset Some Default Trainer Arguments' Default Values
     parser.set_defaults(max_epochs=100)
 
     args = parser.parse_args()
-
-    # List Arguments
-    args.mean_sen = [0.485, 0.456, 0.406]
-    args.std_sen = [0.229, 0.224, 0.225]
 
     main(args)

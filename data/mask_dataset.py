@@ -1,8 +1,8 @@
 from torchvision.transforms import ToTensor
-from torch.utils.data import Dataset, random_split, DataLoader
-from torchvision.io import read_image
-import pytorch_lightning as pl
+from torch.utils.data import Dataset
+# from torchvision.io import read_image
 import os
+import torch
 
 
 class MaskDataset(Dataset):
@@ -17,10 +17,12 @@ class MaskDataset(Dataset):
         return len(self.img_name_list)
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.img_name_list[idx]+'.npy')
-        mask_path = os.path.join(self.mask_dir, self.img_name_list[idx]+'.npy')
-        image = read_image(img_path)
-        mask = read_image(mask_path, mode=1)
+        img_path = os.path.join(self.img_dir, self.img_name_list[idx]+'.pt')
+        mask_path = os.path.join(self.mask_dir, self.img_name_list[idx]+'.pt')
+        # image = read_image(img_path)
+        # mask = read_image(mask_path, mode=1)
+        image = torch.load(img_path)
+        mask = torch.load(img_path)
 
         if self.transform:
             image = self.transform(image)

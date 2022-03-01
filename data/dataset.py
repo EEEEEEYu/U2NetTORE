@@ -51,6 +51,7 @@ class DataInterface(pl.LightningDataModule):
         # Please always name your model file name as `snake_case.py` and
         # class name corresponding `CamelCase`.
         camel_name = ''.join([i.capitalize() for i in name.split('_')])
+        print(camel_name)
         try:
             self.data_module = getattr(importlib.import_module(
                 '.' + name, package=__package__), camel_name)
@@ -58,7 +59,7 @@ class DataInterface(pl.LightningDataModule):
             raise ValueError(
                 f'Invalid Dataset File Name or Invalid Class Name data.{name}.{camel_name}')
 
-    def instancialize(self, **other_args):
+    def instancialize(self, train, **other_args):
         """ Instancialize a model using the corresponding parameters
             from self.hparams dictionary. You can also input any args
             to overwrite the corresponding value in self.kwargs.
@@ -70,4 +71,4 @@ class DataInterface(pl.LightningDataModule):
             if arg in inkeys:
                 args1[arg] = self.kwargs[arg]
         args1.update(other_args)
-        return self.data_module(**args1)
+        return self.data_module('frames', 'mask', **args1)
