@@ -11,7 +11,6 @@ bce_loss = nn.BCELoss(size_average=True)
 
 
 def multi_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
-    print(d0.shape, labels_v.shape)
     loss0 = bce_loss(d0, labels_v)
     loss1 = bce_loss(d1, labels_v)
     loss2 = bce_loss(d2, labels_v)

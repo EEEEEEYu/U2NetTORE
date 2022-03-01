@@ -22,7 +22,7 @@ class MaskDataset(Dataset):
         # image = read_image(img_path)
         # mask = read_image(mask_path, mode=1)
         image = torch.load(img_path)
-        mask = torch.load(img_path)
+        mask = torch.load(mask_path)
 
         if self.transform:
             image = self.transform(image)
