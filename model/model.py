@@ -35,7 +35,7 @@ class ModelInteface(pl.LightningModule):
         return self.model(img)
 
     def training_step(self, batch, batch_idx):
-        img, labels, filename = batch
+        img, labels = batch
         d0, d1, d2, d3, d4, d5, d6 = self(img)
         _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
         self.log('loss', loss, on_step=True, on_epoch=True, prog_bar=True)
