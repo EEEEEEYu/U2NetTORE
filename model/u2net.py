@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .convlstm import BiConvLSTM
+
 
 class REBNCONV(nn.Module):
     def __init__(self, in_ch=3, out_ch=3, dirate=1):
@@ -315,8 +317,20 @@ class RSU4F(nn.Module):  # UNet04FRES(nn.Module):
 ##### U^2-Net ####
 class U2net(nn.Module):
 
-    def __init__(self, in_ch=6, out_ch=1):
+    def __init__(self, in_ch=6, out_ch=1, use_convlstm=False, use_dilated_conv=False):
         super(U2net, self).__init__()
+
+        self.use_convlstm = use_convlstm
+        self.use_dilated_conv = use_dilated_conv
+        if self.use_convlstm:
+            self.conv_lstm = BiConvLSTM(6*out_ch, 6*out_ch, (3, 3), 1, batch_first=True)
+            print("Using BiConvLSTM in U2Net.")
+
+        if self.use_dilated_conv:
+            self.dil1_conv = nn.Conv2d(6, 2, kernel_size=(3, 3), dilation=(2, 2), padding=2)
+            self.dil2_conv = nn.Conv2d(6, 2, kernel_size=(3, 3), dilation=(4, 4), padding=4)
+            self.dil3_conv = nn.Conv2d(6, 2, kernel_size=(3, 3), dilation=(8, 8), padding=8)
+            print("Using dilated conv")
 
         self.stage1 = RSU7(in_ch, 32, 64)
         self.pool12 = nn.MaxPool2d(2, stride=2, ceil_mode=True)
@@ -349,7 +363,7 @@ class U2net(nn.Module):
         self.side5 = nn.Conv2d(512, out_ch, 3, padding=1)
         self.side6 = nn.Conv2d(512, out_ch, 3, padding=1)
 
-        self.outconv = nn.Conv2d(6 * out_ch, out_ch, 1)
+        self.outconv = nn.Conv2d(6 * out_ch * (2 if use_dilated_conv else 1), out_ch, 1)
 
     def forward(self, x):
         hx = x
@@ -411,7 +425,18 @@ class U2net(nn.Module):
         d6 = self.side6(hx6)
         d6 = _upsample_like(d6, d1)
 
-        d0 = self.outconv(torch.cat((d1, d2, d3, d4, d5, d6), 1))
+        dcat = torch.cat((d1, d2, d3, d4, d5, d6), 1)
+        if self.use_convlstm:
+            dcat = self.cl(dcat.unsqueeze(0))[0].squeeze()
+
+        if self.use_dilated_conv:
+            g0 = self.dil1_conv(dcat)
+            g1 = self.dil2_conv(dcat)
+            g2 = self.dil3_conv(dcat)
+
+            dcat = torch.cat((g0, g1, g2, dcat), dim=1)
+
+        d0 = self.outconv(dcat)
 
         return F.sigmoid(d0), F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5), F.sigmoid(d6)
 
