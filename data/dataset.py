@@ -19,12 +19,12 @@ class DataInterface(pl.LightningDataModule):
     def setup(self, stage=None):
         # Assign train/val datasets for use in dataloaders
         if stage == 'fit' or stage is None:
-            self.trainset = self.instancialize()
-            self.valset = self.instancialize()
+            self.trainset = self.instancialize(mode='train', shuffle=True)
+            self.valset = self.instancialize(mode='val', shuffle=False)
 
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
-            self.testset = self.instancialize()
+            self.testset = self.instancialize(mode='test', shuffle=False)
 
         # # If you need to balance your data using Pytorch Sampler,
         # # please uncomment the following lines.
@@ -59,7 +59,7 @@ class DataInterface(pl.LightningDataModule):
             raise ValueError(
                 f'Invalid Dataset File Name or Invalid Class Name data.{name}.{camel_name}')
 
-    def instancialize(self, **other_args):
+    def instancialize(self, mode, shuffle, **other_args):
         """ Instancialize a model using the corresponding parameters
             from self.hparams dictionary. You can also input any args
             to overwrite the corresponding value in self.kwargs.
@@ -71,4 +71,4 @@ class DataInterface(pl.LightningDataModule):
             if arg in inkeys:
                 args1[arg] = self.kwargs[arg]
         args1.update(other_args)
-        return self.data_module(**args1)
+        return self.data_module(mode, shuffle, **args1)

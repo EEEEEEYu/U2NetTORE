@@ -3,18 +3,44 @@ from torch.utils.data import Dataset
 # from torchvision.io import read_image
 import os
 import torch
+import numpy as np
 
 
 class MaskDataset(Dataset):
-    def __init__(self, img_dir, mask_dir, transform=None, mask_transform=None):
+    def __init__(self, mode, shuffle, img_dir, mask_dir, batch_size, transform=None, mask_transform=None):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
-        self.img_name_list = [x.strip('.')[0] for x in os.listdir(img_dir)]
         self.transform = transform
         self.mask_transform = mask_transform
+        self.mode = mode
+        self.batch_size = batch_size
+        self.img_name_list = [x.split('.')[0] for x in os.listdir(img_dir)]
+        self.img_name_list.sort(key=lambda x: int(x))
 
+        if self.mode == 'train':
+            self.img_name_list = self.img_name_list[:int(0.8 * len(self.img_name_list))]
+        elif self.mode == 'val':
+            self.img_name_list = self.img_name_list[int(0.8 * len(self.img_name_list)):int(0.9 * len(self.img_name_list))]
+        elif self.mode == 'test':
+            self.img_name_list = self.img_name_list[int(0.9 * len(self.img_name_list)):]
+        else:
+            raise ValueError("Illegal Dataset Partition!")
+
+        if shuffle:
+            self.img_name_list = self.block_shuffle(self.img_name_list, block_size=self.batch_size)
+
+
+    def block_shuffle(self, array, block_size):
+        block_arr = [[] for _ in range(len(array) // block_size + 1)]
+        for i in range(len(array)):
+            block_arr[i//block_size].append(i)
+        np.random.shuffle(block_arr)
+
+        return [x for block in block_arr for x in block]
+
+    # training set: 80% val/testing set: 10%
     def __len__(self):
-        return len(self.img_name_list)
+        return int(0.8*(len(self.img_name_list))) if self.mode == 'train' else int(0.1*(len(self.img_name_list)))
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_name_list[idx]+'.pt')
