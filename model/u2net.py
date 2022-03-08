@@ -426,8 +426,7 @@ class U2net(nn.Module):
         d6 = _upsample_like(d6, d1)
 
         dcat = torch.cat((d1, d2, d3, d4, d5, d6), 1)
-        print("#######")
-        print(dcat.shape)
+
         if self.use_convlstm:
             dcat = self.conv_lstm(dcat.unsqueeze(0))[0].squeeze()
 
