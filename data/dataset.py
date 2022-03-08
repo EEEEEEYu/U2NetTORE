@@ -19,12 +19,12 @@ class DataInterface(pl.LightningDataModule):
     def setup(self, stage=None):
         # Assign train/val datasets for use in dataloaders
         if stage == 'fit' or stage is None:
-            self.trainset = self.instancialize(train=True)
-            self.valset = self.instancialize(train=False)
+            self.trainset = self.instancialize()
+            self.valset = self.instancialize()
 
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
-            self.testset = self.instancialize(train=False)
+            self.testset = self.instancialize()
 
         # # If you need to balance your data using Pytorch Sampler,
         # # please uncomment the following lines.
@@ -37,7 +37,7 @@ class DataInterface(pl.LightningDataModule):
     #     return DataLoader(self.trainset, batch_size=self.batch_size, num_workers=self.num_workers, sampler = sampler)
 
     def train_dataloader(self):
-        return DataLoader(self.trainset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=True)
+        return DataLoader(self.trainset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
 
     def val_dataloader(self):
         return DataLoader(self.valset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
@@ -59,7 +59,7 @@ class DataInterface(pl.LightningDataModule):
             raise ValueError(
                 f'Invalid Dataset File Name or Invalid Class Name data.{name}.{camel_name}')
 
-    def instancialize(self, train, **other_args):
+    def instancialize(self, **other_args):
         """ Instancialize a model using the corresponding parameters
             from self.hparams dictionary. You can also input any args
             to overwrite the corresponding value in self.kwargs.
@@ -71,4 +71,4 @@ class DataInterface(pl.LightningDataModule):
             if arg in inkeys:
                 args1[arg] = self.kwargs[arg]
         args1.update(other_args)
-        return self.data_module('frames', 'mask', **args1)
+        return self.data_module(**args1)

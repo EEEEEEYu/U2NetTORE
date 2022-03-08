@@ -84,6 +84,10 @@ if __name__ == '__main__':
     parser.add_argument('--no_augment', action='store_true')
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
 
+    # Dataset Info
+    parser.add_argument("--img_dir", default='frames', type=str)
+    parser.add_argument("--mask_dir", default='mask', type=str)
+
     # Reset Some Default Trainer Arguments' Default Values
     parser.set_defaults(max_epochs=100)
 
