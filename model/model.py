@@ -35,6 +35,7 @@ class ModelInteface(pl.LightningModule):
         return self.model(img)
 
     def training_step(self, batch, batch_idx):
+        # print('From model interface:', batch[0].shape)
         img, labels = batch
         d0, d1, d2, d3, d4, d5, d6 = self(img)
         _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)

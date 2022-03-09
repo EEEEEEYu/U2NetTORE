@@ -366,6 +366,7 @@ class U2net(nn.Module):
         self.outconv = nn.Conv2d(6 * out_ch * (2 if use_dilated_conv else 1), out_ch, 1)
 
     def forward(self, x):
+        # print('From model:', x.shape)
         hx = x
 
         # stage 1

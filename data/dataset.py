@@ -15,6 +15,7 @@ class DataInterface(pl.LightningDataModule):
         self.kwargs = kwargs
         self.batch_size = kwargs['batch_size']
         self.load_data_module()
+        # print('From Data interface:', self.batch_size)
 
     def setup(self, stage=None):
         # Assign train/val datasets for use in dataloaders

@@ -43,8 +43,8 @@ class MaskDataset(Dataset):
         return int(0.8*(len(self.img_name_list))) if self.mode == 'train' else int(0.1*(len(self.img_name_list)))
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.img_name_list[idx]+'.pt')
-        mask_path = os.path.join(self.mask_dir, self.img_name_list[idx]+'.pt')
+        img_path = os.path.join(self.img_dir, str(self.img_name_list[idx])+'.pt')
+        mask_path = os.path.join(self.mask_dir, str(self.img_name_list[idx])+'.pt')
         # image = read_image(img_path)
         # mask = read_image(mask_path, mode=1)
         image = torch.load(img_path)
