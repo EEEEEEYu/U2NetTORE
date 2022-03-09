@@ -11,8 +11,17 @@ def generate(frames_dir, mask_dir, size=128):
 def main():
     frames_dir = './frames'
     mask_dir = './mask'
+    if not os.path.exists(frames_dir):
+        os.mkdir(frames_dir)
+    else:
+        os.rmdir(frames_dir)
+    if not os.path.exists(mask_dir):
+        os.mkdir(mask_dir)
+    else:
+        os.rmdir(mask_dir)
     generate(frames_dir, mask_dir)
 
 
 if __name__ == '__main__':
     main()
+
