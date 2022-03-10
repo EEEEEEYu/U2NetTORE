@@ -324,7 +324,8 @@ class U2net(nn.Module):
         self.use_convlstm = use_convlstm
         self.use_dilated_conv = use_dilated_conv
         if self.use_convlstm:
-            self.conv_lstm = BiConvLSTM((256 if use_dilated_conv else 6) * out_ch, (256 if use_dilated_conv else 6) * out_ch, (3, 3), 1, batch_first=True)
+            hid = 256 if use_dilated_conv else 6
+            self.conv_lstm = BiConvLSTM(hid * out_ch, hid * out_ch, (3, 3), 1, batch_first=True)
             print("Using BiConvLSTM in U2Net.")
 
         if self.use_dilated_conv:
