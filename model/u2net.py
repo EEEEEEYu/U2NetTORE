@@ -369,9 +369,9 @@ class U2net(nn.Module):
         self.side5 = nn.Conv2d(512, out_ch, 3, padding=1)
         self.side6 = nn.Conv2d(512, out_ch, 3, padding=1)
 
-        self.outconv1 = ResidualBlock(out_ch * (256 if use_dilated_conv else 6), out_ch * 64, stride=1, expansion=1)
-        self.outconv2 = ResidualBlock(out_ch * 64, out_ch * 16, stride=1, expansion=1)
-        self.outconv3 = ResidualBlock(out_ch * 16, out_ch, stride=1, expansion=1)
+        self.outconv1 = nn.Conv2d(out_ch * (256 if use_dilated_conv else 6), 64 * out_ch, kernel_size=1, stride=1)
+        self.outconv2 = nn.Conv2d(out_ch * 64, 16 * out_ch, kernel_size=1, stride=1)
+        self.outconv3 = nn.Conv2d(out_ch * 16, out_ch, kernel_size=1, stride=1)
 
     def forward(self, x):
         # print('From model:', x.shape)
