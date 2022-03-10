@@ -328,8 +328,8 @@ class U2net(nn.Module):
             print("Using BiConvLSTM in U2Net.")
 
         if self.use_dilated_conv:
-            self.res1 = ResidualBlock(6, 8)  # in 6 out 32
-            self.res2 = ResidualBlock(32, 32)  # in 32 out 128
+            self.res1 = ResidualBlock(6, 8, stride=1, expansion=4)  # in 6 out 32
+            self.res2 = ResidualBlock(32, 32, stride=1, expansion=4)  # in 32 out 128
 
             self.dil1_conv = nn.Conv2d(128, 32, kernel_size=(3, 3), dilation=(2, 2), padding=2)
             self.dil2_conv = nn.Conv2d(128, 32, kernel_size=(3, 3), dilation=(4, 4), padding=4)
@@ -368,7 +368,9 @@ class U2net(nn.Module):
         self.side5 = nn.Conv2d(512, out_ch, 3, padding=1)
         self.side6 = nn.Conv2d(512, out_ch, 3, padding=1)
 
-        self.outconv = nn.Conv2d(out_ch * (256 if use_dilated_conv else 6), out_ch, 1)
+        self.outconv1 = ResidualBlock(out_ch * (256 if use_dilated_conv else 6), out_ch * 64, stride=1, expansion=1)
+        self.outconv2 = ResidualBlock(out_ch * 64, out_ch * 16, stride=1, expansion=1)
+        self.outconv3 = ResidualBlock(out_ch * 16, out_ch, stride=1, expansion=1)
 
     def forward(self, x):
         # print('From model:', x.shape)
@@ -447,6 +449,8 @@ class U2net(nn.Module):
         if self.use_convlstm:
             dcat = self.conv_lstm(dcat.unsqueeze(0))[0].squeeze()
 
-        d0 = self.outconv(dcat)
+        d0 = self.outconv1(dcat)
+        d0 = self.outconv2(d0)
+        d0 = self.outconv3(d0)
 
         return F.sigmoid(d0), F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5), F.sigmoid(d6)

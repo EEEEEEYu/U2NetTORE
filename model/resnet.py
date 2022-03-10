@@ -2,10 +2,9 @@ import torch
 import torch.nn as nn
 
 class ResidualBlock(nn.Module):
-    expansion = 4
-
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, stride=1, expansion=4):
         super(ResidualBlock, self).__init__()
+        self.expansion = expansion
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1)
         self.bn1 = nn.BatchNorm2d(out_channels)
