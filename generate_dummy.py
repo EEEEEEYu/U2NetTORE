@@ -13,12 +13,8 @@ def main():
     mask_dir = './mask'
     if not os.path.exists(frames_dir):
         os.mkdir(frames_dir)
-    else:
-        os.rmdir(frames_dir)
     if not os.path.exists(mask_dir):
         os.mkdir(mask_dir)
-    else:
-        os.rmdir(mask_dir)
     generate(frames_dir, mask_dir)
 
 

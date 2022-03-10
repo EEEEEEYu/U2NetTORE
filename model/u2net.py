@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .convlstm import BiConvLSTM
+from .resnet import ResidualBlock
 
 
 class REBNCONV(nn.Module):
@@ -22,7 +23,7 @@ class REBNCONV(nn.Module):
 
 ## upsample tensor 'src' to have the same spatial size with tensor 'tar'
 def _upsample_like(src, tar):
-    src = F.interpolate(src, size=tar.shape[2:], mode='bilinear',align_corners=False)
+    src = F.interpolate(src, size=tar.shape[2:], mode='bilinear', align_corners=False)
 
     return src
 
@@ -323,13 +324,17 @@ class U2net(nn.Module):
         self.use_convlstm = use_convlstm
         self.use_dilated_conv = use_dilated_conv
         if self.use_convlstm:
-            self.conv_lstm = BiConvLSTM(6*out_ch, 6*out_ch, (3, 3), 1, batch_first=True)
+            self.conv_lstm = BiConvLSTM((256 if use_dilated_conv else 6) * out_ch, (256 if use_dilated_conv else 6) * out_ch, (3, 3), 1, batch_first=True)
             print("Using BiConvLSTM in U2Net.")
 
         if self.use_dilated_conv:
-            self.dil1_conv = nn.Conv2d(6, 2, kernel_size=(3, 3), dilation=(2, 2), padding=2)
-            self.dil2_conv = nn.Conv2d(6, 2, kernel_size=(3, 3), dilation=(4, 4), padding=4)
-            self.dil3_conv = nn.Conv2d(6, 2, kernel_size=(3, 3), dilation=(8, 8), padding=8)
+            self.res1 = ResidualBlock(6, 8)  # in 6 out 32
+            self.res2 = ResidualBlock(32, 32)  # in 32 out 128
+
+            self.dil1_conv = nn.Conv2d(128, 32, kernel_size=(3, 3), dilation=(2, 2), padding=2)
+            self.dil2_conv = nn.Conv2d(128, 32, kernel_size=(3, 3), dilation=(4, 4), padding=4)
+            self.dil3_conv = nn.Conv2d(128, 32, kernel_size=(3, 3), dilation=(8, 8), padding=8)
+            self.dil4_conv = nn.Conv2d(128, 32, kernel_size=(3, 3), dilation=(16, 16), padding=16)
             print("Using dilated conv")
 
         self.stage1 = RSU7(in_ch, 32, 64)
@@ -363,7 +368,7 @@ class U2net(nn.Module):
         self.side5 = nn.Conv2d(512, out_ch, 3, padding=1)
         self.side6 = nn.Conv2d(512, out_ch, 3, padding=1)
 
-        self.outconv = nn.Conv2d(6 * out_ch * (2 if use_dilated_conv else 1), out_ch, 1)
+        self.outconv = nn.Conv2d(out_ch * (256 if use_dilated_conv else 6), out_ch, 1)
 
     def forward(self, x):
         # print('From model:', x.shape)
@@ -428,17 +433,20 @@ class U2net(nn.Module):
 
         dcat = torch.cat((d1, d2, d3, d4, d5, d6), 1)
 
+        if self.use_dilated_conv:
+            dcat = self.res1(dcat)
+            dcat = self.res2(dcat)
+
+            g1 = self.dil1_conv(dcat)
+            g2 = self.dil2_conv(dcat)
+            g3 = self.dil3_conv(dcat)
+            g4 = self.dil4_conv(dcat)
+
+            dcat = torch.cat((g1, g2, g3, g4, dcat), dim=1)
+
         if self.use_convlstm:
             dcat = self.conv_lstm(dcat.unsqueeze(0))[0].squeeze()
-
-        if self.use_dilated_conv:
-            g0 = self.dil1_conv(dcat)
-            g1 = self.dil2_conv(dcat)
-            g2 = self.dil3_conv(dcat)
-
-            dcat = torch.cat((g0, g1, g2, dcat), dim=1)
 
         d0 = self.outconv(dcat)
 
         return F.sigmoid(d0), F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5), F.sigmoid(d6)
-
