@@ -39,21 +39,24 @@ class MaskDataset(Dataset):
         self.mode = mode
         self.batch_size = batch_size
         self.img_name_list = [x.split('.')[0] for x in os.listdir(img_dir)]
-        self.img_name_list.sort(key=lambda x: int(x))
-        self.img_seq_reader = ImgSeqReader(meta_file_path, loop_read, acc_time, cache_size)
+
+        # TODO: Change this to reading meta file of ntores when prepared.
+        self.img_idx_list = list(range(len(self.img_name_list)))
+        # self.img_name_list.sort(key=lambda x: int(x))
+        self.mask_reader = ImgSeqReader(meta_file_path, loop_read, acc_time, cache_size)
 
         if self.mode == 'train':
-            self.img_name_list = self.img_name_list[:int(0.8 * len(self.img_name_list))]
+            self.img_idx_list = self.img_idx_list[:int(0.8 * len(self.img_idx_list))]
         elif self.mode == 'val':
-            self.img_name_list = self.img_name_list[
-                                 int(0.8 * len(self.img_name_list)):int(0.9 * len(self.img_name_list))]
+            self.img_idx_list = self.img_idx_list[
+                                 int(0.8 * len(self.img_idx_list)):int(0.9 * len(self.img_idx_list))]
         elif self.mode == 'test':
-            self.img_name_list = self.img_name_list[int(0.9 * len(self.img_name_list)):]
+            self.img_idx_list = self.img_idx_list[int(0.9 * len(self.img_idx_list)):]
         else:
             raise ValueError("Illegal Dataset Partition!")
 
         if shuffle:
-            self.img_name_list = self.block_shuffle(self.img_name_list, block_size=self.batch_size)
+            self.img_idx_list = self.block_shuffle(self.img_idx_list, block_size=self.batch_size)
 
     def block_shuffle(self, array, block_size):
         block_arr = [[] for _ in range(len(array) // block_size + 1)]
@@ -69,10 +72,16 @@ class MaskDataset(Dataset):
         return int(0.8 * (len(self.img_name_list))) if self.mode == 'train' else int(0.1 * (len(self.img_name_list)))
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, str(self.img_name_list[idx]) + '.pt')
-        mask_path = os.path.join(self.mask_dir, str(self.img_name_list[idx]) + '.pt')
+        tore_path = os.path.join(self.img_dir, f'synthetic_{self.img_name_list[idx]:08d}.npy')
+        ntore = np.load(tore_path)
+        ntore = gen_tore_plus(ntore, percentile=95)
+        ntore = torch.tensor(ntore, dtype=float)
+        mask = self.mask_reader.read_acc_frame(idx)
+        mask = torch.tensor(mask, dtype=float)
+        # img_path = os.path.join(self.img_dir, str(self.img_name_list[idx]) + '.pt')
+        # mask_path = os.path.join(self.mask_dir, str(self.img_name_list[idx]) + '.pt')
 
-        image = torch.load(img_path)
-        mask = torch.load(mask_path)
+        # image = np.load(img_path)
+        # mask = torch.load(mask_path)
 
-        return image, mask
+        return ntore, mask
