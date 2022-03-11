@@ -100,7 +100,7 @@ if __name__ == '__main__':
     parser.set_defaults(max_epochs=100)
 
     args = parser.parse_args()
-    print(args.loop_read, args.use_convlstm, args.shuffle)
+    # print(args.loop_read, args.use_convlstm, args.shuffle)
 
 
     main(args)
