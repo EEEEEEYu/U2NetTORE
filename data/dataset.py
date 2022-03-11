@@ -52,7 +52,7 @@ class DataInterface(pl.LightningDataModule):
         # Please always name your model file name as `snake_case.py` and
         # class name corresponding `CamelCase`.
         camel_name = ''.join([i.capitalize() for i in name.split('_')])
-        print(camel_name)
+        print(camel_name, )
         try:
             self.data_module = getattr(importlib.import_module(
                 '.' + name, package=__package__), camel_name)
