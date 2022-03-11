@@ -91,6 +91,8 @@ if __name__ == '__main__':
     parser.add_argument("--loop_read", default=False, type=bool)
     parser.add_argument("--acc_time", default=0.02, type=float)
     parser.add_argument("--cache_size", default=1, type=int)
+    parser.add_argument("--shuffle", action='store_true')
+    
 
     # TORE Loader Setting
 
@@ -98,5 +100,7 @@ if __name__ == '__main__':
     parser.set_defaults(max_epochs=100)
 
     args = parser.parse_args()
+    print(args.loop_read, args.use_convlstm, args.shuffle)
+
 
     main(args)
