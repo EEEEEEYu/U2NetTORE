@@ -318,7 +318,7 @@ class RSU4F(nn.Module):  # UNet04FRES(nn.Module):
 ##### U^2-Net ####
 class U2net(nn.Module):
 
-    def __init__(self, in_ch=6, out_ch=1, use_convlstm=False, use_dilated_conv=False):
+    def __init__(self, in_ch=8, out_ch=1, use_convlstm=False, use_dilated_conv=False):
         super(U2net, self).__init__()
 
         self.use_convlstm = use_convlstm
