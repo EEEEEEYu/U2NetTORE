@@ -91,7 +91,7 @@ if __name__ == '__main__':
     parser.add_argument("--loop_read", default=False, type=bool)
     parser.add_argument("--acc_time", default=0.02, type=float)
     parser.add_argument("--cache_size", default=1, type=int)
-    parser.add_argument("--shuffle", action='store_true')
+    # parser.add_argument("--shuffle", action='store_true')
     
 
     # TORE Loader Setting
