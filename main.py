@@ -84,9 +84,15 @@ if __name__ == '__main__':
     parser.add_argument('--no_augment', action='store_true')
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
 
-    # Dataset Info
+    # Mask Loader Setting
     parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
     parser.add_argument("--mask_dir", default='dummy_data/mask', type=str)
+    parser.add_argument("--meta_file_path", default="", type=str)
+    parser.add_argument("--loop_read", default=False, type=bool)
+    parser.add_argument("--acc_time", default=0.02, type=float)
+    parser.add_argument("--cache_size", default=1, type=int)
+
+    # TORE Loader Setting
 
     # Reset Some Default Trainer Arguments' Default Values
     parser.set_defaults(max_epochs=100)
