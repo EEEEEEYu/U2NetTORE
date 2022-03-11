@@ -1,1 +1,1 @@
-from ImgSeqReader import ImgSeqReader
+from .ImgSeqReader import ImgSeqReader
