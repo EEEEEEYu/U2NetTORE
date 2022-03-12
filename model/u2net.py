@@ -454,4 +454,4 @@ class U2net(nn.Module):
         d0 = self.outconv2(d0)
         d0 = self.outconv3(d0)
 
-        return F.sigmoid(d0), F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5), F.sigmoid(d6)
+        return F.sigmoid(d0).squeeze(), F.sigmoid(d1).squeeze(), F.sigmoid(d2).squeeze(), F.sigmoid(d3).squeeze(), F.sigmoid(d4).squeeze(), F.sigmoid(d5).squeeze(), F.sigmoid(d6).squeeze()
