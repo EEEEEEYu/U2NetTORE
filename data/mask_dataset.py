@@ -75,9 +75,9 @@ class MaskDataset(Dataset):
         tore_path = os.path.join(self.img_dir, f'synthetic_{self.img_idx_list[idx]:08d}.npy')
         ntore = np.load(tore_path)
         ntore = gen_tore_plus(ntore, percentile=95)
-        ntore = torch.tensor(ntore, dtype=float)
+        ntore = torch.tensor(ntore, dtype=torch.float32)
         mask = self.mask_reader.read_acc_frame(idx)
-        mask = torch.tensor(mask, dtype=float)
+        mask = torch.tensor(mask, dtype=torch.float32)
         # img_path = os.path.join(self.img_dir, str(self.img_name_list[idx]) + '.pt')
         # mask_path = os.path.join(self.mask_dir, str(self.img_name_list[idx]) + '.pt')
 
