@@ -323,9 +323,10 @@ class U2net(nn.Module):
 
         self.use_convlstm = use_convlstm
         self.use_dilated_conv = use_dilated_conv
+        hid = 256 if use_dilated_conv else 6
+        hid_cl =64 if use_dilated_conv else 6
         if self.use_convlstm:
-            hid = 256 if use_dilated_conv else 6
-            self.conv_lstm = BiConvLSTM(hid * out_ch, hid * out_ch, (3, 3), 1, batch_first=True)
+            self.conv_lstm = BiConvLSTM(hid_cl * out_ch, hid_cl * out_ch, (3, 3), 1, batch_first=True)
             print("Using BiConvLSTM in U2Net.")
 
         if self.use_dilated_conv:
@@ -369,8 +370,8 @@ class U2net(nn.Module):
         self.side5 = nn.Conv2d(512, out_ch, 3, padding=1)
         self.side6 = nn.Conv2d(512, out_ch, 3, padding=1)
 
-        self.outconv1 = nn.Conv2d(out_ch * (256 if use_dilated_conv else 6), 64 * out_ch, kernel_size=1, stride=1)
-        self.outconv2 = nn.Conv2d(out_ch * 64, 16 * out_ch, kernel_size=1, stride=1)
+        self.outconv1 = nn.Conv2d(out_ch * hid, hid_cl * out_ch, kernel_size=1, stride=1)
+        self.outconv2 = nn.Conv2d(out_ch * hid_cl, 16 * out_ch, kernel_size=1, stride=1)
         self.outconv3 = nn.Conv2d(out_ch * 16, out_ch, kernel_size=1, stride=1)
 
     def forward(self, x):
@@ -447,11 +448,14 @@ class U2net(nn.Module):
 
             dcat = torch.cat((g1, g2, g3, g4, dcat), dim=1)
 
-        if self.use_convlstm:
-            dcat = self.conv_lstm(dcat.unsqueeze(0))[0].squeeze()
-
         d0 = self.outconv1(dcat)
+
+        if self.use_convlstm:
+            d0 = self.conv_lstm(d0.unsqueeze(0))[0].squeeze()
+
+        # print(d0.shape, x.shape, d1.shape)
+        
         d0 = self.outconv2(d0)
         d0 = self.outconv3(d0)
 
-        return F.sigmoid(d0).squeeze(), F.sigmoid(d1).squeeze(), F.sigmoid(d2).squeeze(), F.sigmoid(d3).squeeze(), F.sigmoid(d4).squeeze(), F.sigmoid(d5).squeeze(), F.sigmoid(d6).squeeze()
+        return d0.squeeze(), d1.squeeze(), d2.squeeze(), d3.squeeze(), d4.squeeze(), d5.squeeze(), d6.squeeze()

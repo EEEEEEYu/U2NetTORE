@@ -1,3 +1,4 @@
+import os
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 
@@ -34,6 +35,7 @@ def load_callbacks():
 
 def main(args):
     pl.seed_everything(args.seed)
+    print(os.getcwd())
     load_path = load_model_path_by_args(args)
     data_module = DataInterface(**vars(args))
 
@@ -42,6 +44,10 @@ def main(args):
     else:
         model = ModelInteface(**vars(args))
         args.resume_from_checkpoint = load_path
+
+    log_profiler = os.path.join(os.getcwd(), "profile.txt")
+    profiler = pl.profiler.AdvancedProfiler(log_profiler)
+    args.profiler = profiler
 
     # # If you want to change the logger's saving folder
     # logger = TensorBoardLogger(save_dir='kfold_log', name=args.log_dir)
@@ -59,7 +65,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--gpus', default=4 if torch.cuda.is_available() else 0, type=int)
     parser.add_argument('--use_convlstm', default=True, type=bool)
     parser.add_argument('--use_dilated_conv', default=True, type=bool)
 
@@ -90,14 +95,19 @@ if __name__ == '__main__':
     parser.add_argument("--meta_file_path", default="", type=str)
     parser.add_argument("--loop_read", default=False, type=bool)
     parser.add_argument("--acc_time", default=0.02, type=float)
-    parser.add_argument("--cache_size", default=1, type=int)
+    parser.add_argument("--cache_size", default=200, type=int)
     # parser.add_argument("--shuffle", action='store_true')
     
+    # Add pytorch lightning's args to parser as a group.
+    parser = Trainer.add_argparse_args(parser)
 
     # TORE Loader Setting
 
     # Reset Some Default Trainer Arguments' Default Values
     parser.set_defaults(max_epochs=100)
+    parser.set_defaults(strategy='ddp')
+    parser.set_defaults(find_unused_parameters=False)
+    parser.set_defaults(gpus=4 if torch.cuda.is_available() else 0)
 
     args = parser.parse_args()
     # print(args.loop_read, args.use_convlstm, args.shuffle)

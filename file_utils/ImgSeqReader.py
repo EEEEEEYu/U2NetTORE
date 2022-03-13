@@ -11,7 +11,6 @@ def read_required_field(meta_info: dict, field: str) -> Any:
     else:
         raise Exception("Required field '{}' missing from meta file".format(field))
 
-
 class ImgSeqReader:
 
     def __init__(self, meta_file_path: str, loop_read: bool = False, acc_time: float = 0.02,

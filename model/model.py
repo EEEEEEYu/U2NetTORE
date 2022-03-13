@@ -7,10 +7,16 @@ import torch.optim.lr_scheduler as lrs
 
 import pytorch_lightning as pl
 
-bce_loss = nn.BCELoss(reduction='mean') #size_average=True)
+bce_loss = nn.BCEWithLogitsLoss(reduction='mean')
+
+# def calc_bce_loss(pred, label):
+#     pred = pred.to(torch.float32)
+#     return (pred, label) #size_average=True)
 
 
 def multi_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
+    # labels_v = labels_v.to(torch.float16)
+    # print(d0.dtype, labels_v.dtype)
     loss0 = bce_loss(d0, labels_v)
     loss1 = bce_loss(d1, labels_v)
     loss2 = bce_loss(d2, labels_v)
