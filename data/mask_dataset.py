@@ -55,7 +55,7 @@ class MaskDataset(Dataset):
         else:
             raise ValueError("Illegal Dataset Partition!")
 
-        if shuffle:
+        if shuffle and self.mode=='train':
             self.img_idx_list = self.block_shuffle(self.img_idx_list, block_size=self.batch_size)
 
     def block_shuffle(self, array, block_size):

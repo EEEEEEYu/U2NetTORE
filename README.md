@@ -9,6 +9,7 @@
 - Precision set to float16并debug (√)
 - argparse bool
 - 当前log folder位置以及正确配置profiling
+- 当前没有考虑到不同folder下文件的取整等问题
 
 tic=time.time()
 gen_tore_plus(n1)
