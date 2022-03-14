@@ -69,7 +69,7 @@ class MaskDataset(Dataset):
     # training set: 80% val/testing set: 10%
     # We always assume that instances are the same number with labels
     def __len__(self):
-        return int(0.8 * (len(self.img_idx_list))) if self.mode == 'train' else int(0.1 * (len(self.img_idx_list)))
+        return len(self.img_idx_list)
 
     def __getitem__(self, idx):
         tore_path = os.path.join(self.img_dir, f'synthetic_{self.img_idx_list[idx]:08d}.npy')
