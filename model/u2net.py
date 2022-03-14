@@ -318,9 +318,10 @@ class RSU4F(nn.Module):  # UNet04FRES(nn.Module):
 ##### U^2-Net ####
 class U2net(nn.Module):
 
-    def __init__(self, in_ch=8, out_ch=1, use_convlstm=False, use_dilated_conv=False):
+    def __init__(self, in_ch=8, out_ch=1, use_convlstm=False, use_dilated_conv=False, batch_size=16):
         super(U2net, self).__init__()
-
+        # print('from model batch size:', batch_size)
+        self.batch_size = batch_size
         self.use_convlstm = use_convlstm
         self.use_dilated_conv = use_dilated_conv
         hid = 256 if use_dilated_conv else 6
@@ -375,7 +376,10 @@ class U2net(nn.Module):
         self.outconv3 = nn.Conv2d(out_ch * 16, out_ch, kernel_size=1, stride=1)
 
     def forward(self, x):
-        # print('From model:', x.shape)
+        print('From model:', x.shape)
+        # G, B, C, H, W = x.shape
+        # x = x.reshape((x.shape[0]* x.shape[1], *list(x.shape[2:])))
+        # x = x.reshape(G*B, *x.shape[2:])
         hx = x
 
         # stage 1
@@ -451,7 +455,9 @@ class U2net(nn.Module):
         d0 = self.outconv1(dcat)
 
         if self.use_convlstm:
-            d0 = self.conv_lstm(d0.unsqueeze(0))[0].squeeze()
+            d0 = d0.reshape(d0.shape[0]//self.batch_size, self.batch_size, *d0.shape[1:])
+            d0 = self.conv_lstm(d0)[0].reshape(d0.shape[0]*d0.shape[1], *d0.shape[2:])
+            # d0 = self.conv_lstm(d0.unsqueeze(0))[0].squeeze()
 
         # print(d0.shape, x.shape, d1.shape)
         

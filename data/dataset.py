@@ -14,6 +14,7 @@ class DataInterface(pl.LightningDataModule):
         self.dataset = dataset
         self.kwargs = kwargs
         self.batch_size = kwargs['batch_size']
+        self.gpus = kwargs['gpus']
         self.load_data_module()
         # print('From Data interface:', self.batch_size)
 
@@ -27,24 +28,14 @@ class DataInterface(pl.LightningDataModule):
         if stage == 'test' or stage is None:
             self.testset = self.instancialize(mode='test', shuffle=False)
 
-        # # If you need to balance your data using Pytorch Sampler,
-        # # please uncomment the following lines.
-
-        # with open('./data/ref/samples_weight.pkl', 'rb') as f:
-        #     self.sample_weight = pkl.load(f)
-
-    # def train_dataloader(self):
-    #     sampler = WeightedRandomSampler(self.sample_weight, len(self.trainset)*20)
-    #     return DataLoader(self.trainset, batch_size=self.batch_size, num_workers=self.num_workers, sampler = sampler)
-
     def train_dataloader(self):
-        return DataLoader(self.trainset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.trainset, batch_size=self.gpus, num_workers=self.num_workers, shuffle=False)
 
     def val_dataloader(self):
-        return DataLoader(self.valset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.valset, batch_size=self.gpus, num_workers=self.num_workers, shuffle=False)
 
     def test_dataloader(self):
-        return DataLoader(self.testset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.testset, batch_size=self.gpus, num_workers=self.num_workers, shuffle=False)
 
     def load_data_module(self):
         name = self.dataset

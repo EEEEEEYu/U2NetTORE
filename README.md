@@ -12,7 +12,7 @@
 - 当前没有考虑到不同folder下文件的取整等问题
 - 文件总数使用meta中的描述
 - ntore改成新的reader
-- 
+- 告诉ckd定版的人物list，催他看噪音参数
 
 tic=time.time()
 gen_tore_plus(n1)

@@ -31,9 +31,8 @@ def gen_tore_plus(tore, threshold=None, percentile=95):
     tore_plus = np.concatenate((pos_recent, tore[0:3], neg_recent, tore[3:]), axis=0)
     return tore_plus
 
-
 class MaskDataset(Dataset):
-    def __init__(self, mode, shuffle, img_dir, mask_dir, batch_size, meta_file_path, loop_read, acc_time, cache_size):
+    def __init__(self, mode, shuffle, img_dir, mask_dir, batch_size, meta_file_path, loop_read, acc_time, cache_size, gpus):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.mode = mode
@@ -69,19 +68,28 @@ class MaskDataset(Dataset):
     # training set: 80% val/testing set: 10%
     # We always assume that instances are the same number with labels
     def __len__(self):
-        return int(0.8 * (len(self.img_idx_list))) if self.mode == 'train' else int(0.1 * (len(self.img_idx_list)))
+        return int(len(self.img_idx_list)) // self.batch_size
 
     def __getitem__(self, idx):
-        tore_path = os.path.join(self.img_dir, f'synthetic_{self.img_idx_list[idx]:08d}.npy')
-        ntore = np.load(tore_path)
-        ntore = gen_tore_plus(ntore, percentile=95)
-        ntore = torch.tensor(ntore, dtype=torch.float32)
-        mask = self.mask_reader.read_acc_frame(idx)
-        mask = torch.tensor(mask, dtype=torch.float32)
+        ntores = []
+        masks = []
+        for i in range(self.batch_size):
+            # The real index for files
+            file_idx = idx*self.batch_size + i
+
+            tore_path = os.path.join(self.img_dir, f'synthetic_{self.img_idx_list[file_idx]:08d}.npy')
+            ntore = np.load(tore_path)
+            ntore = gen_tore_plus(ntore, percentile=95)
+            ntores.append(torch.tensor(ntore, dtype=torch.float32))
+            mask = self.mask_reader.read_acc_frame(file_idx)
+            masks.append(torch.tensor(mask, dtype=torch.float32))
+        ntores = np.stack(ntores)
+        masks = np.stack(masks)
+        # print(ntores.shape, masks.shape)
         # img_path = os.path.join(self.img_dir, str(self.img_name_list[idx]) + '.pt')
         # mask_path = os.path.join(self.mask_dir, str(self.img_name_list[idx]) + '.pt')
 
         # image = np.load(img_path)
         # mask = torch.load(mask_path)
 
-        return ntore, mask
+        return ntores, masks

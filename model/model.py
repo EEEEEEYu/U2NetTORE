@@ -43,6 +43,10 @@ class ModelInteface(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         # print('From model interface:', batch[0].shape)
         img, labels = batch
+
+        img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
+        
         d0, d1, d2, d3, d4, d5, d6 = self(img)
         _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
         self.log('loss', loss, on_step=True, on_epoch=True, prog_bar=True)
@@ -50,6 +54,10 @@ class ModelInteface(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         img, labels = batch
+
+        img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
+        
         d0, d1, d2, d3, d4, d5, d6 = self(img)
         _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
 

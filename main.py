@@ -33,6 +33,14 @@ def load_callbacks():
     return callbacks
 
 
+def get_gpu_num(gpus):
+    if type(gpus) is str:
+        gpus = int(gpus)
+    elif type(gpus) in (list, tuple):
+        gpus = len(gpus)
+    assert type(gpus) is int
+    return gpus
+
 def main(args):
     pl.seed_everything(args.seed)
     print(os.getcwd())
@@ -111,6 +119,9 @@ if __name__ == '__main__':
     parser.set_defaults(gpus=4 if torch.cuda.is_available() else 0)
 
     args = parser.parse_args()
+    args.gpus = get_gpu_num(args.gpus)
+    args.batch_size = args.batch_size // args.gpus
+    print(args.batch_size)
     # print(args.loop_read, args.use_convlstm, args.shuffle)
 
 
