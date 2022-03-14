@@ -65,8 +65,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--use_convlstm', default=True, type=bool)
-    parser.add_argument('--use_dilated_conv', default=True, type=bool)
 
     # LR Scheduler
     parser.add_argument('--lr_scheduler', choices=['step', 'cosine'], type=str)
@@ -89,6 +87,10 @@ if __name__ == '__main__':
     parser.add_argument('--no_augment', action='store_true')
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
 
+    # Model Info
+    parser.add_argument('--use_convlstm', default=True, type=bool)
+    parser.add_argument('--use_dilated_conv', default=True, type=bool)
+
     # Mask Loader Setting
     parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
     parser.add_argument("--mask_dir", default='dummy_data/mask', type=str)
@@ -98,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument("--cache_size", default=200, type=int)
     # parser.add_argument("--shuffle", action='store_true')
     
+
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)
 
