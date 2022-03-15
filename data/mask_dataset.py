@@ -32,7 +32,7 @@ def gen_tore_plus(tore, threshold=None, percentile=95):
     return tore_plus
 
 class MaskDataset(Dataset):
-    def __init__(self, mode, shuffle, mask_root, ntore_root, batch_size, loop_read, acc_time, cache_size, gpus):
+    def __init__(self, mode, shuffle, mask_root, ntore_root, batch_size, loop_read, acc_time, cache_size):
         self.mode = mode
         self.batch_size = batch_size
         self.mask_root = mask_root

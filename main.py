@@ -53,9 +53,10 @@ def main(args):
         model = ModelInteface(**vars(args))
         args.resume_from_checkpoint = load_path
 
-    log_profiler = os.path.join(os.getcwd(), "profile.txt")
-    profiler = pl.profiler.AdvancedProfiler(log_profiler)
-    args.profiler = profiler
+    if args.use_profiler:
+        log_profiler = os.path.join(os.getcwd(), "profile.txt")
+        profiler = pl.profiler.AdvancedProfiler(log_profiler)
+        args.profiler = profiler
 
     # # If you want to change the logger's saving folder
     # logger = TensorBoardLogger(save_dir='kfold_log', name=args.log_dir)

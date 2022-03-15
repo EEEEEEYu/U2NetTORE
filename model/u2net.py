@@ -376,7 +376,7 @@ class U2net(nn.Module):
         self.outconv3 = nn.Conv2d(out_ch * 16, out_ch, kernel_size=1, stride=1)
 
     def forward(self, x):
-        print('From model:', x.shape)
+        # print('From model:', x.shape)
         # G, B, C, H, W = x.shape
         # x = x.reshape((x.shape[0]* x.shape[1], *list(x.shape[2:])))
         # x = x.reshape(G*B, *x.shape[2:])
