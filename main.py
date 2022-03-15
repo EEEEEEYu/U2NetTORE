@@ -46,9 +46,10 @@ def main(args):
         model = ModelInteface(**vars(args))
         args.resume_from_checkpoint = load_path
 
-    log_profiler = os.path.join(os.getcwd(), "profile.txt")
-    profiler = pl.profiler.AdvancedProfiler(log_profiler)
-    args.profiler = profiler
+    if args.use_profiler:
+        log_profiler = os.path.join(os.getcwd(), "profile.txt")
+        profiler = pl.profiler.AdvancedProfiler(log_profiler)
+        args.profiler = profiler
 
     # # If you want to change the logger's saving folder
     # logger = TensorBoardLogger(save_dir='kfold_log', name=args.log_dir)
@@ -108,7 +109,7 @@ if __name__ == '__main__':
 
     # Reset Some Default Trainer Arguments' Default Values
     parser.set_defaults(max_epochs=100)
-    parser.set_defaults(strategy='ddp')
+    parser.set_defaults(strategy='dp')
     parser.set_defaults(find_unused_parameters=False)
     parser.set_defaults(gpus=4 if torch.cuda.is_available() else 0)
 
