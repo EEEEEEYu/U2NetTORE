@@ -33,16 +33,19 @@ def gen_tore_plus(tore, threshold=None, percentile=95):
 
 class MaskDataset(Dataset):
     def __init__(self, mode, shuffle, img_dir, mask_dir, batch_size, meta_file_path, loop_read, acc_time, cache_size, gpus):
-        self.img_dir = img_dir
-        self.mask_dir = mask_dir
         self.mode = mode
         self.batch_size = batch_size
-        self.img_name_list = [x.split('.')[0] for x in os.listdir(img_dir)]
+        self.mask_root = mask_root
+        self.ntore_root = ntore_root
+        # self.img_name_list = [x.split('.')[0] for x in os.listdir(img_dir)]
+        self.mask_reader = ImgSeqReader(op.join(mask_root, 'meta.json'), loop_read, acc_time, cache_size)
+        self.ntore_reader = ToreReader(op.join(ntore_root, 'meta.json'), cache_size)
+
+        # self.img_dir = op.join(self.ntore_root, self.ntore_reader.tore_file_dir)
+        # self.img_name_list = self.ntore_reader.tore_file_list
 
         # TODO: Change this to reading meta file of ntores when prepared.
-        self.img_idx_list = list(range(len(self.img_name_list)))
-        # self.img_name_list.sort(key=lambda x: int(x))
-        self.mask_reader = ImgSeqReader(meta_file_path, loop_read, acc_time, cache_size)
+        self.img_idx_list = list(range(self.ntore_reader.total_tore_count))
 
         if self.mode == 'train':
             self.img_idx_list = self.img_idx_list[:int(0.8 * len(self.img_idx_list))]
@@ -77,12 +80,12 @@ class MaskDataset(Dataset):
             # The real index for files
             file_idx = idx*self.batch_size + i
 
-            tore_path = os.path.join(self.img_dir, f'synthetic_{self.img_idx_list[file_idx]:08d}.npy')
-            ntore = np.load(tore_path)
-            ntore = gen_tore_plus(ntore, percentile=95)
-            ntores.append(torch.tensor(ntore, dtype=torch.float32))
             mask = self.mask_reader.read_acc_frame(file_idx)
             masks.append(torch.tensor(mask, dtype=torch.float32))
+            ntore = self.ntore_reader.get_tore_by_index(file_idx)
+            ntore = gen_tore_plus(ntore, percentile=95)
+            ntores.append(torch.tensor(ntore, dtype=torch.float32))
+
         ntores = np.stack(ntores)
         masks = np.stack(masks)
         # print(ntores.shape, masks.shape)
