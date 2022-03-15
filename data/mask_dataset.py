@@ -1,8 +1,8 @@
 from torch.utils.data import Dataset
 import torch
 import numpy as np
-import os
-from file_utils import ImgSeqReader
+import os.path as op
+from file_utils import ImgSeqReader, ToreReader
 
 def gen_tore_plus(tore, threshold=None, percentile=95):
     """ Generate the PLUS version of tore volume.
@@ -32,7 +32,7 @@ def gen_tore_plus(tore, threshold=None, percentile=95):
     return tore_plus
 
 class MaskDataset(Dataset):
-    def __init__(self, mode, shuffle, img_dir, mask_dir, batch_size, meta_file_path, loop_read, acc_time, cache_size, gpus):
+    def __init__(self, mode, shuffle, mask_root, ntore_root, batch_size, loop_read, acc_time, cache_size, gpus):
         self.mode = mode
         self.batch_size = batch_size
         self.mask_root = mask_root
