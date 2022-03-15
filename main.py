@@ -8,7 +8,7 @@ import pytorch_lightning.callbacks as plc
 
 from model import ModelInteface
 from data import DataInterface
-from utils import load_model_path_by_args
+from utils import load_model_path_by_args, SBool
 
 
 def load_callbacks():
@@ -94,16 +94,17 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--no_augment', action='store_true')
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
+    parser.add_argument("--use_profiler", type=SBool, default=False, nargs='?', const=True)
 
     # Model Info
-    parser.add_argument('--use_convlstm', default=True, type=bool)
-    parser.add_argument('--use_dilated_conv', default=True, type=bool)
+    parser.add_argument("--use_convlstm", type=SBool, default=True, nargs='?', const=True)
+    parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
 
     # Mask Loader Setting
-    parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
-    parser.add_argument("--mask_dir", default='dummy_data/mask', type=str)
-    parser.add_argument("--meta_file_path", default="", type=str)
-    parser.add_argument("--loop_read", default=False, type=bool)
+    # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
+    parser.add_argument("--mask_root", default="", type=str)
+    parser.add_argument("--ntore_root", default="", type=str)
+    parser.add_argument("--loop_read", type=SBool, default=False, nargs='?', const=True)
     parser.add_argument("--acc_time", default=0.02, type=float)
     parser.add_argument("--cache_size", default=200, type=int)
 

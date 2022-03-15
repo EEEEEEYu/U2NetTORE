@@ -45,3 +45,13 @@ def load_model_path(root=None, version=None, v_num=None, best=False):
 
 def load_model_path_by_args(args):
     return load_model_path(root=args.load_dir, version=args.load_ver, v_num=args.load_v_num)
+
+def SBool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
