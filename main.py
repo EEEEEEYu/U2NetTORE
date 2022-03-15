@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     # Reset Some Default Trainer Arguments' Default Values
     parser.set_defaults(max_epochs=100)
-    parser.set_defaults(strategy='ddp')
+    parser.set_defaults(strategy='dp')
     parser.set_defaults(find_unused_parameters=False)
     parser.set_defaults(gpus=4 if torch.cuda.is_available() else 0)
 
