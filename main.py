@@ -126,5 +126,4 @@ if __name__ == '__main__':
     print(args.batch_size)
     # print(args.loop_read, args.use_convlstm, args.shuffle)
 
-
     main(args)
