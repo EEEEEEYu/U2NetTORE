@@ -11,7 +11,8 @@
 - 当前log folder位置以及正确配置profiling
 - 当前没有考虑到不同folder下文件的取整等问题
 - 文件总数使用meta中的描述
-- ntore改成新的reader
+- ntore改成新的reader (√)
+- 不同的strategy parallel
 - 
 
 tic=time.time()
