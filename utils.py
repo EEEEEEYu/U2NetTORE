@@ -1,5 +1,22 @@
 import os
+import argparse
+import os.path as op
 from pathlib2 import Path
+from datetime import datetime
+
+from sympy import expand_power_base
+
+
+def get_folder(path):
+    """ Return a path to a folder, creating it if it doesn't exist 
+    Args:
+        path: The path of the new folder.
+    Returns:
+        _ : The guaranteed path of the folder/file.
+    """
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def load_model_path(root=None, version=None, v_num=None, best=False):
@@ -45,6 +62,24 @@ def load_model_path(root=None, version=None, v_num=None, best=False):
 
 def load_model_path_by_args(args):
     return load_model_path(root=args.load_dir, version=args.load_ver, v_num=args.load_v_num)
+
+
+def build_working_tree(root=None, name=''):
+    if root is None:
+        root = get_folder(op.join(os.getcwd(), 'lightning_logs'))
+
+    now = datetime.now()
+    dt = now.strftime("%m-%d-%H-%M")
+    name = f'{dt}_{name}' if len(name) != 0 else dt
+    exp_path = get_folder(op.join(root, name))
+    os.chdir(exp_path)
+    # exp_path = os.getcwd()
+    logger_dir = get_folder(op.join(exp_path, "tb_logs"))
+    checkpoint_dir = get_folder(op.join(exp_path, "checkpoints"))
+    recorder_dir = get_folder(op.join(exp_path, "recorder"))
+    log_profiler = op.join(exp_path, "profile.txt")
+    return logger_dir, checkpoint_dir, recorder_dir, log_profiler
+
 
 def SBool(v):
     if isinstance(v, bool):
