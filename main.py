@@ -5,14 +5,16 @@ from argparse import ArgumentParser
 import torch.cuda
 from pytorch_lightning import Trainer
 import pytorch_lightning.callbacks as plc
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from model import ModelInteface
 from data import DataInterface
-from utils import load_model_path_by_args, SBool
+from utils import load_model_path_by_args, SBool, build_working_tree
 
 
-def load_callbacks():
+def load_callbacks(checkpoint_dir=None):
     callbacks = []
+    
     callbacks.append(plc.EarlyStopping(
         monitor='val_loss',
         mode='min',
@@ -20,6 +22,7 @@ def load_callbacks():
     ))
 
     callbacks.append(plc.ModelCheckpoint(
+        dirpath=checkpoint_dir,
         monitor='val_loss',
         filename='best-{epoch:02d}-{val_loss:.6f}',
         save_top_k=1,
@@ -33,19 +36,15 @@ def load_callbacks():
     return callbacks
 
 
-def get_gpu_num(gpus):
-    if type(gpus) is str:
-        gpus = int(gpus)
-    elif type(gpus) in (list, tuple):
-        gpus = len(gpus)
-    assert type(gpus) is int
-    return gpus
-
 def main(args):
     pl.seed_everything(args.seed)
+    logger_dir, checkpoint_dir, recorder_dir, log_profiler = build_working_tree(name='')
+
     print(os.getcwd())
     load_path = load_model_path_by_args(args)
     data_module = DataInterface(**vars(args))
+
+    args.callbacks = load_callbacks(checkpoint_dir=checkpoint_dir)
 
     if load_path is None:
         model = ModelInteface(**vars(args))
@@ -54,14 +53,13 @@ def main(args):
         args.resume_from_checkpoint = load_path
 
     if args.use_profiler:
-        log_profiler = os.path.join(os.getcwd(), "profile.txt")
+        # log_profiler = os.path.join(os.getcwd(), "profile.txt")
         profiler = pl.profiler.AdvancedProfiler(log_profiler)
         args.profiler = profiler
 
     # # If you want to change the logger's saving folder
-    # logger = TensorBoardLogger(save_dir='kfold_log', name=args.log_dir)
-    # args.callbacks = load_callbacks()
-    # args.logger = logger
+    logger = TensorBoardLogger(save_dir=logger_dir, name='')
+    args.logger = logger
 
     trainer = Trainer.from_argparse_args(args)
     trainer.fit(model, data_module)
