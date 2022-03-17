@@ -4,8 +4,6 @@ import os.path as op
 from pathlib2 import Path
 from datetime import datetime
 
-from sympy import expand_power_base
-
 
 def get_folder(path):
     """ Return a path to a folder, creating it if it doesn't exist 
