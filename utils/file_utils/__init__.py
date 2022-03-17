@@ -1,2 +1,2 @@
-from .ImgSeqReader import ImgSeqReader
-from .ToreReader import ToreReader
+from .img_seq_reader import ImgSeqReader
+from .tore_seq_reader import ToreSeqReader

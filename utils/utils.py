@@ -88,3 +88,12 @@ def SBool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def get_gpu_num(gpus):
+    if type(gpus) is str:
+        gpus = int(gpus)
+    elif type(gpus) in (list, tuple):
+        gpus = len(gpus)
+    assert type(gpus) is int
+    return gpus

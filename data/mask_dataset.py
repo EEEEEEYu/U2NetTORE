@@ -2,7 +2,7 @@ from torch.utils.data import Dataset
 import torch
 import numpy as np
 import os.path as op
-from file_utils import ImgSeqReader, ToreReader
+from utils.file_utils import ImgSeqReader, ToreSeqReader
 
 def gen_tore_plus(tore, threshold=None, percentile=95):
     """ Generate the PLUS version of tore volume.
@@ -39,7 +39,7 @@ class MaskDataset(Dataset):
         self.ntore_root = ntore_root
         # self.img_name_list = [x.split('.')[0] for x in os.listdir(img_dir)]
         self.mask_reader = ImgSeqReader(op.join(mask_root, 'meta.json'), loop_read, acc_time, cache_size)
-        self.ntore_reader = ToreReader(op.join(ntore_root, 'meta.json'), cache_size)
+        self.ntore_reader = ToreSeqReader(op.join(ntore_root, 'meta.json'), cache_size)
 
         # self.img_dir = op.join(self.ntore_root, self.ntore_reader.tore_file_dir)
         # self.img_name_list = self.ntore_reader.tore_file_list

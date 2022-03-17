@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from model import ModelInteface
 from data import DataInterface
-from utils import load_model_path_by_args, SBool, build_working_tree
+from utils import load_model_path_by_args, SBool, build_working_tree, get_gpu_num
 
 
 def load_callbacks(checkpoint_dir=None):
