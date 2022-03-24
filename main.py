@@ -68,7 +68,7 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     # Basic Training Control
-    parser.add_argument('--batch_size', default=16, type=int)
+    parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
@@ -99,13 +99,16 @@ if __name__ == '__main__':
     parser.add_argument("--use_convlstm", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
 
-    # Mask Loader Setting
+    # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
     parser.add_argument("--mask_root", default="", type=str)
     parser.add_argument("--ntore_root", default="", type=str)
     parser.add_argument("--loop_read", type=SBool, default=False, nargs='?', const=True)
-    parser.add_argument("--acc_time", default=0.02, type=float)
+    parser.add_argument("--acc_time", default=0.02, type=float, help='Accumulation time for mask readers.')
+    parser.add_argument("--step_size", default=0.02, type=float, help='Step size for mask readers.')
     parser.add_argument("--cache_size", default=200, type=int)
+    parser.add_argument("--seq_len", default=16, type=int, help='The sequence length used in the convlstm.')
+    
 
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)
@@ -120,8 +123,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.gpus = get_gpu_num(args.gpus)
-    args.batch_size = args.batch_size // args.gpus
-    print(args.batch_size)
+    # args.batch_size = args.batch_size // args.gpus
+    # print(args.batch_size)
     # print(args.loop_read, args.use_convlstm, args.shuffle)
 
     main(args)

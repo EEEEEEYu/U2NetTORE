@@ -318,10 +318,10 @@ class RSU4F(nn.Module):  # UNet04FRES(nn.Module):
 ##### U^2-Net ####
 class U2net(nn.Module):
 
-    def __init__(self, in_ch=8, out_ch=1, use_convlstm=False, use_dilated_conv=False, batch_size=16):
+    def __init__(self, in_ch=8, out_ch=1, use_convlstm=False, use_dilated_conv=False, seq_len=16):
         super(U2net, self).__init__()
         # print('from model batch size:', batch_size)
-        self.batch_size = batch_size
+        self.seq_len = seq_len
         self.use_convlstm = use_convlstm
         self.use_dilated_conv = use_dilated_conv
         hid = 256 if use_dilated_conv else 6
@@ -455,7 +455,7 @@ class U2net(nn.Module):
         d0 = self.outconv1(dcat)
 
         if self.use_convlstm:
-            d0 = d0.reshape(d0.shape[0]//self.batch_size, self.batch_size, *d0.shape[1:])
+            d0 = d0.reshape(d0.shape[0]//self.seq_len, self.seq_len, *d0.shape[1:])
             d0 = self.conv_lstm(d0)[0].reshape(d0.shape[0]*d0.shape[1], *d0.shape[2:])
             # d0 = self.conv_lstm(d0.unsqueeze(0))[0].squeeze()
 

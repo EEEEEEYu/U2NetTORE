@@ -13,7 +13,7 @@ def read_required_field(meta_info: dict, field: str) -> Any:
 
 class ImgSeqReader:
 
-    def __init__(self, meta_file_path: str, loop_read: bool = False, acc_time: float = 0.02,
+    def __init__(self, meta_file_path: str, loop_read: bool = False, acc_time: float = 0.02, step_size=0.02,
                  cache_size: int = 1) -> None:
         """
         :param meta_file_path: path to the json file containing meta information
@@ -33,6 +33,7 @@ class ImgSeqReader:
         self.file_idx: int = 0
         self.reverse_reading = False
         self.acc_time: float = acc_time
+        self.step_size = step_size
         self.meta_info: dict = {}
         self.total_frame_count: int = 0
         self.fps: int = 0
@@ -136,7 +137,7 @@ class ImgSeqReader:
         return self.read_acc_frame(self.acc_frame_index - 1)
 
     def read_acc_frame(self, acc_frame_index: int):
-        start_time = acc_frame_index * self.acc_time
+        start_time = acc_frame_index * self.step_size
         end_time = start_time + self.acc_time
 
         start_frame_index = int(start_time * self.fps)

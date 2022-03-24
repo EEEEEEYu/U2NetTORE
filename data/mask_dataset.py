@@ -32,33 +32,32 @@ def gen_tore_plus(tore, threshold=None, percentile=95):
     return tore_plus
 
 class MaskDataset(Dataset):
-    def __init__(self, mode, shuffle, mask_root, ntore_root, batch_size, loop_read, acc_time, cache_size):
+    def __init__(self, mode, shuffle, indexes, tore_readers, mask_readers, seq_len, acc_time, cache_size):
         self.mode = mode
-        self.batch_size = batch_size
-        self.mask_root = mask_root
-        self.ntore_root = ntore_root
-        # self.img_name_list = [x.split('.')[0] for x in os.listdir(img_dir)]
-        self.mask_reader = ImgSeqReader(op.join(mask_root, 'meta.json'), loop_read, acc_time, cache_size)
-        self.ntore_reader = ToreSeqReader(op.join(ntore_root, 'meta.json'), cache_size)
+        self.shuffle = shuffle
+        self.indexes = indexes
+        self.tore_readers = tore_readers
+        self.mask_readers = mask_readers
+        self.seq_len = seq_len
 
         # self.img_dir = op.join(self.ntore_root, self.ntore_reader.tore_file_dir)
         # self.img_name_list = self.ntore_reader.tore_file_list
 
-        # TODO: Change this to reading meta file of ntores when prepared.
-        self.img_idx_list = list(range(self.ntore_reader.total_tore_count))
+        # # TODO: Change this to reading meta file of ntores when prepared.
+        # self.img_idx_list = list(range(self.ntore_reader.total_tore_count))
 
-        if self.mode == 'train':
-            self.img_idx_list = self.img_idx_list[:int(0.8 * len(self.img_idx_list))]
-        elif self.mode == 'val':
-            self.img_idx_list = self.img_idx_list[
-                                 int(0.8 * len(self.img_idx_list)):int(0.9 * len(self.img_idx_list))]
-        elif self.mode == 'test':
-            self.img_idx_list = self.img_idx_list[int(0.9 * len(self.img_idx_list)):]
-        else:
-            raise ValueError("Illegal Dataset Partition!")
+        # if self.mode == 'train':
+        #     self.img_idx_list = self.img_idx_list[:int(0.8 * len(self.img_idx_list))]
+        # elif self.mode == 'val':
+        #     self.img_idx_list = self.img_idx_list[
+        #                          int(0.8 * len(self.img_idx_list)):int(0.9 * len(self.img_idx_list))]
+        # elif self.mode == 'test':
+        #     self.img_idx_list = self.img_idx_list[int(0.9 * len(self.img_idx_list)):]
+        # else:
+        #     raise ValueError("Illegal Dataset Partition!")
 
-        if shuffle and self.mode=='train':
-            self.img_idx_list = self.block_shuffle(self.img_idx_list, block_size=self.batch_size)
+        # if shuffle and self.mode=='train':
+        #     self.img_idx_list = self.block_shuffle(self.img_idx_list, block_size=self.batch_size)
 
     def block_shuffle(self, array, block_size):
         block_arr = [[] for _ in range(len(array) // block_size + 1)]
@@ -71,14 +70,14 @@ class MaskDataset(Dataset):
     # training set: 80% val/testing set: 10%
     # We always assume that instances are the same number with labels
     def __len__(self):
-        return int(len(self.img_idx_list)) // self.batch_size
+        return int(len(self.img_idx_list)) // self.seq_len
 
     def __getitem__(self, idx):
         ntores = []
         masks = []
-        for i in range(self.batch_size):
+        for i in range(self.seq_len):
             # The real index for files
-            file_idx = idx*self.batch_size + i
+            file_idx = idx*self.seq_len + i
 
             mask = self.mask_reader.read_acc_frame(file_idx)
             masks.append(torch.tensor(mask, dtype=torch.float32))

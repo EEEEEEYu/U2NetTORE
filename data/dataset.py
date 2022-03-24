@@ -1,41 +1,70 @@
 import inspect
 import importlib
+from matplotlib.pyplot import step
 import pytorch_lightning as pl
+from dotdict import dotdict
 from torch.utils.data import DataLoader
+from ..utils import process_meta_files
 
 
 class DataInterface(pl.LightningDataModule):
 
     def __init__(self, num_workers=8,
                  dataset='',
-                 **kwargs):
+                 **hparams):
         super().__init__()
         self.num_workers = num_workers
         self.dataset = dataset
-        self.kwargs = kwargs
-        self.batch_size = kwargs['batch_size']
-        self.gpus = kwargs['gpus']
+        self.hparams = dotdict(hparams)
+        # self.kwargs = kwargs
+        # self.batch_size = kwargs['batch_size']
+        # self.gpus = kwargs['gpus']
         self.load_data_module()
         # print('From Data interface:', self.batch_size)
 
     def setup(self, stage=None):
         # Assign train/val datasets for use in dataloaders
+        tv_indexes, test_indexes, tv_tore_readers, tv_mask_readers, test_tore_readers, test_mask_readers = process_meta_files(
+            self.hparams.data_dir,
+            block_size=self.hparams.seq_len,
+            base_number=self.hparams.base_number,
+            test_characters=self.hparams.test_characters,
+            shuffle=False,
+            cache_size=self.hparams.cache_size,
+            acc_time=self.hparams.acc_time,
+            step_size=self.hparams.step_size)
+
         if stage == 'fit' or stage is None:
-            self.trainset = self.instancialize(mode='train', shuffle=True)
-            self.valset = self.instancialize(mode='val', shuffle=False)
+            train_indexes = tv_indexes[:int(0.8 * len(tv_indexes))]
+            val_indexes = tv_indexes[int(0.8 * len(tv_indexes)):]
+            # TODO: Shuffle to False later
+            self.trainset = self.instancialize(mode='train', shuffle=False,
+                                               indexes=train_indexes, 
+                                               tore_readers=tv_tore_readers,
+                                               mask_readers=tv_mask_readers)
+            self.valset = self.instancialize(mode='val', shuffle=False,
+                                               indexes=val_indexes, 
+                                               tore_readers=tv_tore_readers,
+                                               mask_readers=tv_mask_readers)
+
+            # self.trainset = self.instancialize(mode='train', shuffle=True)
+            # self.valset = self.instancialize(mode='val', shuffle=False)
 
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
-            self.testset = self.instancialize(mode='test', shuffle=False)
+            self.testset = self.instancialize(mode='test', shuffle=False,
+                                               indexes=test_indexes, 
+                                               tore_readers=test_tore_readers,
+                                               mask_readers=test_mask_readers)
 
     def train_dataloader(self):
-        return DataLoader(self.trainset, batch_size=self.gpus, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.trainset, batch_size=self.hparams.batch_size, num_workers=self.num_workers, shuffle=True)
 
     def val_dataloader(self):
-        return DataLoader(self.valset, batch_size=self.gpus, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.valset, batch_size=self.hparams.batch_size, num_workers=self.num_workers, shuffle=False)
 
     def test_dataloader(self):
-        return DataLoader(self.testset, batch_size=self.gpus, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.testset, batch_size=self.hparams.batch_size, num_workers=self.num_workers, shuffle=False)
 
     def load_data_module(self):
         name = self.dataset
