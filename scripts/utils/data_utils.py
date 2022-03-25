@@ -68,8 +68,8 @@ def get_batch_by_idx(idx:int, indexes:np.ndarray, tore_readers:dict, mask_reader
         ntores.append(gen_tore_plus(tore, percentile=percentile))
     ntores = np.stack(ntores)
     masks = np.stack(masks)
-    mask_readers[reader_idx].cleanup()
-    tore_readers[reader_idx].cleanup()
+    mask_readers[reader_idx].clear_cache()
+    tore_readers[reader_idx].clear_cache()
     return ntores, masks
 
 def shuffle_arr_by_block(arr, block_size:int, ramdom_offset:bool=True, seed:int=None):

@@ -1,9 +1,11 @@
 from torch.utils.data import Dataset
 import torch
+import time
 import numpy as np
 import os.path as op
 # from utils.file_utils import ImgSeqReader, ToreSeqReader
-from ..utils import get_pair_by_idx#, gen_tore_plus
+from ..utils import get_pair_by_idx, get_batch_by_idx, gen_tore_plus
+
 
 # def gen_tore_plus(tore, threshold=None, percentile=95):
 #     """ Generate the PLUS version of tore volume.
@@ -75,21 +77,44 @@ class MaskDataset(Dataset):
         return int(len(self.indexes) // self.seq_len)
 
     def __getitem__(self, idx):
+        reader_idx, tore_idx = self.indexes[idx*self.seq_len]
         ntores = []
         masks = []
+        tic = time.time()
         for i in range(self.seq_len):
-            # The real index for files
-            file_idx = idx*self.seq_len + i
-            ntore, mask = get_pair_by_idx(file_idx, self.indexes, self.tore_readers, self.mask_readers, percentile=self.percentile)
-
-            # mask = self.mask_reader.read_acc_frame(file_idx)
+            mask = self.mask_readers[reader_idx].read_acc_frame(tore_idx+i)
             masks.append(torch.tensor(mask, dtype=torch.float32))
-            # ntore = self.ntore_reader.get_tore_by_index(file_idx)
-            # ntore = gen_tore_plus(ntore, percentile=95)
+            ntore = (self.tore_readers[reader_idx].get_tore_by_index(tore_idx+i))
+            ntore = gen_tore_plus(ntore, percentile=self.percentile)
             ntores.append(torch.tensor(ntore, dtype=torch.float32))
-
         ntores = np.stack(ntores)
         masks = np.stack(masks)
+        self.mask_readers[reader_idx].clear_cache()
+        self.tore_readers[reader_idx].clear_cache()
+        print('== Data Loading time: ', time.time()-tic)
+
+
+        # ntores, masks = get_batch_by_idx(idx*self.seq_len, 
+        #                                  self.indexes, 
+        #                                  self.tore_readers, 
+        #                                  self.mask_readers, 
+        #                                  percentile=self.percentile, 
+        #                                  batch_size=self.seq_len)
+        # ntores = []
+        # masks = []
+        # for i in range(self.seq_len):
+        #     # The real index for files
+        #     file_idx = idx*self.seq_len + i
+        #     ntore, mask = get_pair_by_idx(file_idx, self.indexes, self.tore_readers, self.mask_readers, percentile=self.percentile)
+
+        #     # mask = self.mask_reader.read_acc_frame(file_idx)
+        #     masks.append(torch.tensor(mask, dtype=torch.float32))
+        #     # ntore = self.ntore_reader.get_tore_by_index(file_idx)
+        #     # ntore = gen_tore_plus(ntore, percentile=95)
+        #     ntores.append(torch.tensor(ntore, dtype=torch.float32))
+
+        # ntores = np.stack(ntores)
+        # masks = np.stack(masks)
 
         # print('From Dataset: ', ntores.shape, masks.shape)
         # img_path = os.path.join(self.img_dir, str(self.img_name_list[idx]) + '.pt')

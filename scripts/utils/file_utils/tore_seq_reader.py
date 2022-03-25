@@ -101,11 +101,11 @@ class ToreSeqReader:
                                                                                         index))
         if int(index / self.batch_size) != self.current_batch_index:
             self.load_batch(int(index / self.batch_size))
-        return self.current_label_batch[str(index)]
+        return self.current_label_batch[str(index)].item()
 
     def get_pair_by_index(self, index: int):
         return self.get_tore_by_index(index), self.get_label_by_index(index)
-    
+
     def clear_cache(self):
         self.cache_queue = []
         self.tore_cache_dict = {}

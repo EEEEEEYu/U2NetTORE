@@ -41,6 +41,7 @@ class ImgSeqReader:
         self.file_list: dict = {}
 
         self.acc_frame_index: int = 0
+        self.dict_file_format = False
 
         self.unpack_meta(meta_file_path)
         self.meta_file_dir: str = os.path.dirname(meta_file_path)
@@ -78,13 +79,19 @@ class ImgSeqReader:
         self.fps = read_required_field(self.meta_info, "fps")
         self.batch_size = read_required_field(self.meta_info, "batch_size")
         self.file_list = read_required_field(self.meta_info, "file_list")
+        if self.meta_info['dict_file_format']:
+            self.dict_file_format = True
 
     def total_frame(self) -> int:
         return self.total_frame_count
 
-    def load_batch_from_disk(self, batch_index: int) :
+    def load_batch_from_disk(self, batch_index: int):
         batch_file = np.load(os.path.join(self.meta_file_dir, self.file_list[str(batch_index)]), allow_pickle=True)
-        self.current_batch = batch_file[list(batch_file.keys())[0]]
+        # the sequence is in the old format which is an array
+        if not self.dict_file_format:
+            self.current_batch = batch_file[list(batch_file.keys())[0]]
+        else:
+            self.current_batch = batch_file
         self.current_batch_index = batch_index
 
     def load_batch_from_queue(self, batch_index: int) -> None:
@@ -125,12 +132,16 @@ class ImgSeqReader:
         if frame_index < 0:
             raise IndexError("Frame index must be greater or equal to 0. Received: {}".format(frame_index))
         if frame_index >= self.total_frame_count:
-            raise IndexError("Frame index out of bound. Image sequence has {} frames. Received: {}".format(self.total_frame_count, frame_index))
+            raise IndexError(
+                "Frame index out of bound. Image sequence has {} frames. Received: {}".format(self.total_frame_count,
+                                                                                              frame_index))
 
         if int(frame_index / self.batch_size) != self.current_batch_index:
             self.load_batch(int(frame_index / self.batch_size))
-
-        return self.current_batch[frame_index % self.batch_size]
+        if not self.dict_file_format:
+            return self.current_batch[frame_index % self.batch_size]
+        else:
+            return self.current_batch[str(frame_index)]
 
     def read_next_acc_frame(self):
         self.acc_frame_index += 1
