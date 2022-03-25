@@ -7,9 +7,9 @@ from pytorch_lightning import Trainer
 import pytorch_lightning.callbacks as plc
 from pytorch_lightning.loggers import TensorBoardLogger
 
-from model import ModelInteface
-from data import DataInterface
-from utils import load_model_path_by_args, SBool, build_working_tree, get_gpu_num
+from scripts.model import ModelInteface
+from scripts.data import DataInterface
+from scripts.utils import load_model_path_by_args, SBool, build_working_tree, get_gpu_num
 
 
 def load_callbacks(checkpoint_dir=None):
@@ -101,14 +101,17 @@ if __name__ == '__main__':
 
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
-    parser.add_argument("--mask_root", default="", type=str)
-    parser.add_argument("--ntore_root", default="", type=str)
+    parser.add_argument("--mask_dir", default="", type=str)
+    parser.add_argument("--tore_dir", default="", type=str)
     parser.add_argument("--loop_read", type=SBool, default=False, nargs='?', const=True)
     parser.add_argument("--acc_time", default=0.02, type=float, help='Accumulation time for mask readers.')
     parser.add_argument("--step_size", default=0.02, type=float, help='Step size for mask readers.')
     parser.add_argument("--cache_size", default=200, type=int)
     parser.add_argument("--seq_len", default=16, type=int, help='The sequence length used in the convlstm.')
-    
+    parser.add_argument('--base_number', default=128, type=int, help="The base number of each meta file data piece number.")
+    parser.add_argument('--test_characters', type=str, nargs='*', default=['Miku'], help="Characters whos are only used in the test session.")
+    parser.add_argument('--percentile', default=90, type=float, help="The percentile used to generate the extra band in ntore.")
+
 
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)

@@ -1,5 +1,4 @@
 import glob
-from nbformat import read
 import numpy as np
 import os.path as op
 from pathlib2 import Path
@@ -41,7 +40,11 @@ def get_pair_by_idx(idx:int, indexes:np.ndarray, tore_readers:dict, mask_readers
     """
     reader_idx, tore_idx = indexes[idx]
     tore = tore_readers[reader_idx].get_tore_by_index(tore_idx)
+    # print(reader_idx, tore_idx, 'TORE Done!')
+
     mask = mask_readers[reader_idx].read_acc_frame(tore_idx)
+    # print(reader_idx, tore_idx, 'Mask Done!')
+
     ntore = gen_tore_plus(tore, percentile=percentile)
     return ntore, mask
 
@@ -108,8 +111,11 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
         test_mask_meta_files = [f for f in mask_meta_files if any([c in f for c in test_characters])]
         
         # Train and Validation meta files
-        tv_tore_meta_files = list(set(tore_meta_files) - set(test_tore_meta_files))
-        tv_mask_meta_files = list(set(mask_meta_files) - set(test_mask_meta_files))
+        tv_tore_meta_files = [f for f in tore_meta_files if f not in test_tore_meta_files]
+        tv_mask_meta_files = [f for f in mask_meta_files if f not in test_mask_meta_files]
+
+        # tv_tore_meta_files = list(set(tore_meta_files) - set(test_tore_meta_files))
+        # tv_mask_meta_files = list(set(mask_meta_files) - set(test_mask_meta_files))
     else:
         tv_tore_meta_files = tore_meta_files
         tv_mask_meta_files = mask_meta_files
