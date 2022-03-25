@@ -48,6 +48,30 @@ def get_pair_by_idx(idx:int, indexes:np.ndarray, tore_readers:dict, mask_readers
     ntore = gen_tore_plus(tore, percentile=percentile)
     return ntore, mask
 
+def get_batch_by_idx(idx:int, indexes:np.ndarray, tore_readers:dict, mask_readers:dict, percentile:float=80, batch_size=16):
+    """ Get the ntore and its corresponding label in batch.
+    Args:
+        idx: int, the overall index.
+        indexes: ndarray, shape: (?, 2), the merged indexes pack from all meta files.
+        readers: dict, readers.
+        percentile: float, the percentile used to generate the extra band in ntore.
+    Return:
+        ntore: the ntore processed.
+        label: corresponding label.
+    """
+    reader_idx, tore_idx = indexes[idx]
+    ntores = []
+    masks = []
+    for i in range(batch_size):
+        masks.append(mask_readers[reader_idx].read_acc_frame(tore_idx+i))
+        tore = (tore_readers[reader_idx].get_tore_by_index(tore_idx+i))
+        ntores.append(gen_tore_plus(tore, percentile=percentile))
+    ntores = np.stack(ntores)
+    masks = np.stack(masks)
+    mask_readers[reader_idx].cleanup()
+    tore_readers[reader_idx].cleanup()
+    return ntores, masks
+
 def shuffle_arr_by_block(arr, block_size:int, ramdom_offset:bool=True, seed:int=None):
     """ Shuffle a list/ndarray in block.
     Args:
