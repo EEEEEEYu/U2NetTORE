@@ -106,7 +106,7 @@ if __name__ == '__main__':
     parser.add_argument("--loop_read", type=SBool, default=False, nargs='?', const=True)
     parser.add_argument("--acc_time", default=0.02, type=float, help='Accumulation time for mask readers.')
     parser.add_argument("--step_size", default=0.02, type=float, help='Step size for mask readers.')
-    parser.add_argument("--cache_size", default=200, type=int)
+    parser.add_argument("--cache_size", default=1, type=int)
     parser.add_argument("--seq_len", default=16, type=int, help='The sequence length used in the convlstm.')
     parser.add_argument('--base_number', default=128, type=int, help="The base number of each meta file data piece number.")
     parser.add_argument('--test_characters', type=str, nargs='*', default=['Miku'], help="Characters whos are only used in the test session.")
