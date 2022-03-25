@@ -105,3 +105,11 @@ class ToreSeqReader:
 
     def get_pair_by_index(self, index: int):
         return self.get_tore_by_index(index), self.get_label_by_index(index)
+    
+    def clear_cache(self):
+        self.cache_queue = []
+        self.tore_cache_dict = {}
+        self.label_cache_dict = {}        
+        self.current_label_batch = None
+        self.current_tore_batch = None
+        self.current_batch_index = -1

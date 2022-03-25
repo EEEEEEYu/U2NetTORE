@@ -159,3 +159,9 @@ class ImgSeqReader:
                 acc_frame = frame_data
 
         return (acc_frame > 0).astype(int)
+
+    def clear_cache(self):
+        self.cache_queue = []
+        self.cache_dict = {}      
+        self.current_batch = None
+        self.current_batch_index = -1
