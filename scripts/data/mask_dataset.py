@@ -2,43 +2,45 @@ from torch.utils.data import Dataset
 import torch
 import numpy as np
 import os.path as op
-from utils.file_utils import ImgSeqReader, ToreSeqReader
+# from utils.file_utils import ImgSeqReader, ToreSeqReader
+from ..utils import get_pair_by_idx#, gen_tore_plus
 
-def gen_tore_plus(tore, threshold=None, percentile=95):
-    """ Generate the PLUS version of tore volume.
-        Two filtered most recent cache layers are added to the volume.
-    Args:
-        tore: ndarry, (6, h, w).
-        percentile: float, 0~100. The percentile threshold. Works on
-            neg and pose separately. Percentile has higher priority.
-            80 is recommended as default percentile.
-        threshold: float, 0~1. The fixed threshold for both neg and pos.
-            0.5 is recommended as default threshold.
+# def gen_tore_plus(tore, threshold=None, percentile=95):
+#     """ Generate the PLUS version of tore volume.
+#         Two filtered most recent cache layers are added to the volume.
+#     Args:
+#         tore: ndarry, (6, h, w).
+#         percentile: float, 0~100. The percentile threshold. Works on
+#             neg and pose separately. Percentile has higher priority.
+#             80 is recommended as default percentile.
+#         threshold: float, 0~1. The fixed threshold for both neg and pos.
+#             0.5 is recommended as default threshold.
 
-    Return:
-        ndarry, (8, h, w). NTORE volume proposed.
-    """
-    if percentile is not None:
-        pos_thres = np.percentile(tore[0][tore[0] != 0], percentile)
-        neg_thres = np.percentile(tore[3][tore[3] != 0], percentile)
-        pos_recent = np.where(tore[0] > pos_thres, tore[0], 0)[np.newaxis, :]
-        neg_recent = np.where(tore[3] > neg_thres, tore[3], 0)[np.newaxis, :]
-    elif threshold is not None:
-        pos_recent = np.where(tore[0] > threshold, tore[0], 0)[np.newaxis, :]
-        neg_recent = np.where(tore[3] > threshold, tore[3], 0)[np.newaxis, :]
-    else:
-        raise ValueError('Please specify the value of threshold or percentile!')
-    tore_plus = np.concatenate((pos_recent, tore[0:3], neg_recent, tore[3:]), axis=0)
-    return tore_plus
+#     Return:
+#         ndarry, (8, h, w). NTORE volume proposed.
+#     """
+#     if percentile is not None:
+#         pos_thres = np.percentile(tore[0][tore[0] != 0], percentile)
+#         neg_thres = np.percentile(tore[3][tore[3] != 0], percentile)
+#         pos_recent = np.where(tore[0] > pos_thres, tore[0], 0)[np.newaxis, :]
+#         neg_recent = np.where(tore[3] > neg_thres, tore[3], 0)[np.newaxis, :]
+#     elif threshold is not None:
+#         pos_recent = np.where(tore[0] > threshold, tore[0], 0)[np.newaxis, :]
+#         neg_recent = np.where(tore[3] > threshold, tore[3], 0)[np.newaxis, :]
+#     else:
+#         raise ValueError('Please specify the value of threshold or percentile!')
+#     tore_plus = np.concatenate((pos_recent, tore[0:3], neg_recent, tore[3:]), axis=0)
+#     return tore_plus
 
 class MaskDataset(Dataset):
-    def __init__(self, mode, shuffle, indexes, tore_readers, mask_readers, seq_len, acc_time, cache_size):
+    def __init__(self, mode, shuffle, indexes, tore_readers, mask_readers, seq_len, percentile):
         self.mode = mode
         self.shuffle = shuffle
         self.indexes = indexes
         self.tore_readers = tore_readers
         self.mask_readers = mask_readers
         self.seq_len = seq_len
+        self.percentile = percentile
 
         # self.img_dir = op.join(self.ntore_root, self.ntore_reader.tore_file_dir)
         # self.img_name_list = self.ntore_reader.tore_file_list
@@ -70,7 +72,7 @@ class MaskDataset(Dataset):
     # training set: 80% val/testing set: 10%
     # We always assume that instances are the same number with labels
     def __len__(self):
-        return int(len(self.img_idx_list)) // self.seq_len
+        return int(len(self.indexes) // self.seq_len)
 
     def __getitem__(self, idx):
         ntores = []
@@ -78,16 +80,18 @@ class MaskDataset(Dataset):
         for i in range(self.seq_len):
             # The real index for files
             file_idx = idx*self.seq_len + i
+            ntore, mask = get_pair_by_idx(file_idx, self.indexes, self.tore_readers, self.mask_readers, percentile=self.percentile)
 
-            mask = self.mask_reader.read_acc_frame(file_idx)
+            # mask = self.mask_reader.read_acc_frame(file_idx)
             masks.append(torch.tensor(mask, dtype=torch.float32))
-            ntore = self.ntore_reader.get_tore_by_index(file_idx)
-            ntore = gen_tore_plus(ntore, percentile=95)
+            # ntore = self.ntore_reader.get_tore_by_index(file_idx)
+            # ntore = gen_tore_plus(ntore, percentile=95)
             ntores.append(torch.tensor(ntore, dtype=torch.float32))
 
         ntores = np.stack(ntores)
         masks = np.stack(masks)
-        # print(ntores.shape, masks.shape)
+
+        # print('From Dataset: ', ntores.shape, masks.shape)
         # img_path = os.path.join(self.img_dir, str(self.img_name_list[idx]) + '.pt')
         # mask_path = os.path.join(self.mask_dir, str(self.img_name_list[idx]) + '.pt')
 

@@ -31,9 +31,12 @@ def multi_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
 
 
 class ModelInteface(pl.LightningModule):
-    def __init__(self, model_name, loss, lr, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
+        del self.hparams['callbacks']
+        print('Model hparams saved!')
+        # print(self.hparams.keys())
         self.load_model()
         self.configure_loss()
 

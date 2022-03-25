@@ -58,11 +58,11 @@ class ToreSeqReader:
         batch_file = np.load(op.join(self.meta_file_dir,
                                      self.tore_file_dir,
                                      self.tore_file_list[str(batch_index)]), allow_pickle=True)
-        self.current_tore_batch = batch_file[list(batch_file.keys())[0]]
+        self.current_tore_batch = batch_file
         batch_file = np.load(op.join(self.meta_file_dir,
                                      self.label_file_dir,
                                      self.label_file_list[str(batch_index)]), allow_pickle=True)
-        self.current_label_batch = batch_file[list(batch_file.keys())[0]]
+        self.current_label_batch = batch_file
         self.current_batch_index = batch_index
 
     def load_batch_from_queue(self, batch_index: int) -> None:
@@ -90,7 +90,7 @@ class ToreSeqReader:
     def get_tore_by_index(self, index: int) -> np.ndarray:
         if int(index / self.batch_size) != self.current_batch_index:
             self.load_batch(int(index / self.batch_size))
-        return self.current_tore_batch[index % self.batch_size]
+        return self.current_tore_batch[str(index)]
 
     def get_label_by_index(self, index: int) -> dict:
         if index < 0:
@@ -101,7 +101,7 @@ class ToreSeqReader:
                                                                                         index))
         if int(index / self.batch_size) != self.current_batch_index:
             self.load_batch(int(index / self.batch_size))
-        return self.current_label_batch[index % self.batch_size]
+        return self.current_label_batch[str(index)]
 
     def get_pair_by_index(self, index: int):
         return self.get_tore_by_index(index), self.get_label_by_index(index)
