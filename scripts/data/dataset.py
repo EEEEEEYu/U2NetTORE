@@ -31,7 +31,7 @@ class DataInterface(pl.LightningDataModule):
             block_size=self.kwargs.seq_len,
             base_number=self.kwargs.base_number,
             test_characters=self.kwargs.test_characters,
-            shuffle=False,
+            shuffle=True, # in order to make train val split in random
             cache_size=self.kwargs.cache_size,
             acc_time=self.kwargs.acc_time,
             step_size=self.kwargs.step_size)
@@ -39,6 +39,7 @@ class DataInterface(pl.LightningDataModule):
         if stage == 'fit' or stage is None:
             train_indexes = tv_indexes[:int(0.8 * len(tv_indexes))]
             val_indexes = tv_indexes[int(0.8 * len(tv_indexes)):]
+            print("Length of train data:", len(train_indexes), '\nLength of val data: ', len(val_indexes))
             # TODO: Shuffle to False later
             self.trainset = self.instancialize(mode='train', shuffle=False,
                                                indexes=train_indexes, 
