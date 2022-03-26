@@ -80,7 +80,7 @@ class MaskDataset(Dataset):
         reader_idx, tore_idx = self.indexes[idx*self.seq_len]
         ntores = []
         masks = []
-        tic = time.time()
+        # tic = time.time()
         for i in range(self.seq_len):
             mask = self.mask_readers[reader_idx].read_acc_frame(tore_idx+i)
             masks.append(torch.tensor(mask, dtype=torch.float32))
@@ -91,7 +91,7 @@ class MaskDataset(Dataset):
         masks = np.stack(masks)
         self.mask_readers[reader_idx].clear_cache()
         self.tore_readers[reader_idx].clear_cache()
-        print('== Data Loading time: ', time.time()-tic)
+        # print('== Data Loading time: ', time.time()-tic)
 
 
         # ntores, masks = get_batch_by_idx(idx*self.seq_len, 

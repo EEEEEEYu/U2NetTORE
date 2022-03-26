@@ -225,7 +225,9 @@ class BiConvLSTM(nn.Module):
                                           kernel_size=self.kernel_size[i],
                                           bias=self.bias))
             fuse_list.append(
-                nn.Conv2d(2 * input_dim, input_dim, 1, 1, bias=True))
+                nn.Conv2d(2 * hidden_dim[i], hidden_dim[i], 1, 1, bias=True))
+                # nn.Conv2d(2 * input_dim, input_dim, 1, 1, bias=True))
+                
         self.cell_list = nn.ModuleList(cell_list)
         self.fuse_list = nn.ModuleList(fuse_list)
 
@@ -314,72 +316,3 @@ class BiConvLSTM(nn.Module):
         if not isinstance(param, list):
             param = [param] * num_layers
         return param
-
-    # def forward(self, input_tensor, ):
-    #     if not self.batch_first:
-    #         # (t, b, c, h, w) -> (b, t, c, h, w)
-    #         input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
-
-    #     b, _, _, h, w = input_tensor.size()
-
-    #     # Implement stateful ConvLSTM
-    #     if hidden_state is not None:
-    #         raise NotImplementedError()
-    #     else:
-    #         # Since the init is done in forward. Can send image size here
-    #         hidden_state = self._init_hidden(batch_size=b,
-    #                                          image_size=(h, w))
-
-    #     reversed_idx = list(reversed(range(input_tensor.shape[1])))
-    #     x_rev = x[:, reversed_idx, ...]
-
-    #     layer_output_list = []
-    #     last_state_list = []
-
-    #     seq_len = input_tensor.size(1)
-    #     forward_layer_input = input_tensor
-
-    #     for layer_idx in range(self.num_layers):
-
-    #         h, c = hidden_state[layer_idx]
-    #         output_inner = []
-    #         for t in range(seq_len):
-    #             h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :],
-    #                                              cur_state=[h, c])
-    #             output_inner.append(h)
-
-    #         layer_output = torch.stack(output_inner, dim=1) # all hs
-    #         cur_layer_input = layer_output
-
-    #         layer_output_list.append(layer_output) # 3*all hs
-    #         last_state_list.append([h, c]) # 3*last [h,c]
-
-    #     if not self.return_all_layers:
-    #         layer_output_list = layer_output_list[-1:] # 1*all hs
-    #         last_state_list = last_state_list[-1:] # 1 * last [h, c]
-
-    #     return layer_output_list, last_state_list
-
-    #     _, last_forward = self.forward_net(x)
-    #     _, last_backward = self.forward_net(x_rev)
-    #     result = torch.cat((last_forward[0][0],last_backward[0][0]), dim=1)
-    #     result = self.conv_1x1(result)
-    #     return result
-
-    # def _init_hidden(self, batch_size, image_size):
-    #     init_states = []
-    #     for i in range(self.num_layers):
-    #         init_states.append(self.cell_list[i].init_hidden(batch_size, image_size))
-    #     return init_states
-
-    # @staticmethod
-    # def _check_kernel_size_consistency(kernel_size):
-    #     if not (isinstance(kernel_size, tuple) or
-    #             (isinstance(kernel_size, list) and all([isinstance(elem, tuple) for elem in kernel_size]))):
-    #         raise ValueError('`kernel_size` must be tuple or list of tuples')
-
-    # @staticmethod
-    # def _extend_for_multilayer(param, num_layers):
-    #     if not isinstance(param, list):
-    #         param = [param] * num_layers
-    #     return param

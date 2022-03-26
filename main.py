@@ -89,7 +89,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='mask_dataset', type=str)
     parser.add_argument('--data_dir', default='ref/data', type=str)
     parser.add_argument('--model_name', default='u2net', type=str)
-    parser.add_argument('--loss', default='bce', type=str)
+    parser.add_argument('--loss', default='bce', type=str, choices=('bce', 'mbce'))
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--no_augment', action='store_true')
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
@@ -98,6 +98,8 @@ if __name__ == '__main__':
     # Model Info
     parser.add_argument("--use_convlstm", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
+    parser.add_argument("--bilinear", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
+    
 
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)

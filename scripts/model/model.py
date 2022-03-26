@@ -14,9 +14,10 @@ bce_loss = nn.BCEWithLogitsLoss(reduction='mean')
 #     return (pred, label) #size_average=True)
 
 
-def multi_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
+def multi_bce_loss_fusion(ds, labels_v):
     # labels_v = labels_v.to(torch.float16)
     # print(d0.dtype, labels_v.dtype)
+    d0, d1, d2, d3, d4, d5, d6 = ds
     loss0 = bce_loss(d0, labels_v)
     loss1 = bce_loss(d1, labels_v)
     loss2 = bce_loss(d2, labels_v)
@@ -27,7 +28,7 @@ def multi_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
 
     loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5 + loss6
 
-    return loss0, loss
+    return loss #loss0, loss
 
 
 class ModelInteface(pl.LightningModule):
@@ -44,25 +45,27 @@ class ModelInteface(pl.LightningModule):
         return self.model(img)
 
     def training_step(self, batch, batch_idx):
-        # print('From model interface:', batch[0].shape)
         img, labels = batch
+        # print('From model interface 1:', img[0].shape)
 
         img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        # print('From model interface 2:', img[0].shape)
         labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         
-        d0, d1, d2, d3, d4, d5, d6 = self(img)
-        _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
+        ds = self(img)
+        loss = self.loss_function(ds, labels)
         self.log('loss', loss, on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         img, labels = batch
+        # print('From model interface 1:', img[0].shape)
 
         img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
         labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         
-        d0, d1, d2, d3, d4, d5, d6 = self(img)
-        _, loss = self.loss_function(d0, d1, d2, d3, d4, d5, d6, labels)
+        ds = self(img)
+        loss = self.loss_function(ds, labels)
 
         self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
 
@@ -99,7 +102,12 @@ class ModelInteface(pl.LightningModule):
 
     def configure_loss(self):
         loss = self.hparams.loss.lower()
-        self.loss_function = multi_bce_loss_fusion
+        if loss == 'mbce':
+            self.loss_function = multi_bce_loss_fusion
+        elif loss == 'bce':
+            self.loss_function = nn.BCEWithLogitsLoss(reduction='mean')
+        else:
+            raise KeyError("Invalid Loss Choice!")
 
     def load_model(self):
         name = self.hparams.model_name
