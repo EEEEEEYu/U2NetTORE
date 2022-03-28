@@ -35,7 +35,8 @@ class ModelInteface(pl.LightningModule):
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
-        del self.hparams['callbacks']
+        if 'callbacks' in self.hparams.keys():
+            del self.hparams['callbacks']
         print('Model hparams saved!')
         # print(self.hparams.keys())
         self.load_model()
@@ -70,8 +71,11 @@ class ModelInteface(pl.LightningModule):
         self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
-        # Here we just reuse the validation_step for testing
-        return self.validation_step(batch, batch_idx)
+        img, labels = batch
+        img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
+        ds = self(img)
+        return F.sigmoid(ds)
 
     def on_validation_epoch_end(self):
         # Make the Progress Bar leave there
