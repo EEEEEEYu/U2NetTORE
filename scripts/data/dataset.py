@@ -4,6 +4,8 @@ from matplotlib.pyplot import step
 import pytorch_lightning as pl
 from dotdict import dotdict
 from torch.utils.data import DataLoader
+
+from scripts.utils.data_utils import process_meta_files_accumulated
 from ..utils import process_meta_files
 
 
@@ -25,16 +27,29 @@ class DataInterface(pl.LightningDataModule):
     def setup(self, stage=None):
         print("running dataset setup...")
         # Assign train/val datasets for use in dataloaders
-        tv_indexes, test_indexes, tv_tore_readers, tv_mask_readers, test_tore_readers, test_mask_readers = process_meta_files(
-            self.kwargs.mask_dir,
-            self.kwargs.tore_dir,
-            block_size=self.kwargs.seq_len,
-            base_number=self.kwargs.base_number,
-            test_characters=self.kwargs.test_characters,
-            shuffle=True, # in order to make train val split in random
-            cache_size=self.kwargs.cache_size,
-            acc_time=self.kwargs.acc_time,
-            step_size=self.kwargs.step_size)
+        if self.kwargs.accumulated:
+            print('[√] Using pre-accumulated mask files.')
+            tv_indexes, test_indexes, tv_tore_readers, tv_mask_readers, test_tore_readers, test_mask_readers = process_meta_files_accumulated(
+                self.kwargs.mask_dir,
+                self.kwargs.tore_dir,
+                block_size=self.kwargs.seq_len,
+                base_number=self.kwargs.base_number,
+                test_characters=self.kwargs.test_characters,
+                shuffle=True, # in order to make train val split in random
+                cache_size=self.kwargs.cache_size,
+                acc_time=self.kwargs.acc_time)
+        else:
+            print('[×] Using raw mask files. Will generate the accumulated version on the fly.')
+            tv_indexes, test_indexes, tv_tore_readers, tv_mask_readers, test_tore_readers, test_mask_readers = process_meta_files(
+                self.kwargs.mask_dir,
+                self.kwargs.tore_dir,
+                block_size=self.kwargs.seq_len,
+                base_number=self.kwargs.base_number,
+                test_characters=self.kwargs.test_characters,
+                shuffle=True, # in order to make train val split in random
+                cache_size=self.kwargs.cache_size,
+                acc_time=self.kwargs.acc_time,
+                step_size=self.kwargs.step_size)
 
         if stage == 'fit' or stage is None:
             train_indexes = tv_indexes[:int(0.8 * len(tv_indexes))]

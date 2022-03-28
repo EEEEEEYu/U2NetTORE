@@ -100,11 +100,11 @@ if __name__ == '__main__':
     parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--bilinear", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
     
-
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
     parser.add_argument("--mask_dir", default="", type=str)
     parser.add_argument("--tore_dir", default="", type=str)
+    parser.add_argument("--accumulated", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--loop_read", type=SBool, default=False, nargs='?', const=True)
     parser.add_argument("--acc_time", default=0.02, type=float, help='Accumulation time for mask readers.')
     parser.add_argument("--step_size", default=0.02, type=float, help='Step size for mask readers.')
