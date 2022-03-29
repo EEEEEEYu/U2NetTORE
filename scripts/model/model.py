@@ -72,7 +72,8 @@ class ModelInteface(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         img, labels = batch
-        img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        if len(img.shape) > 4:
+            img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
         labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         ds = self(img)
         return F.sigmoid(ds)

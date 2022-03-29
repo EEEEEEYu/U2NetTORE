@@ -146,7 +146,6 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
         tv_tore_meta_files = tore_meta_files
         tv_mask_meta_files = mask_meta_files
         
-    
     tv_tore_readers = {i:ToreSeqReader(f, cache_size=cache_size) for i,f in enumerate(tv_tore_meta_files)}
     tv_mask_readers = {i:ImgSeqReader(f, acc_time=acc_time, step_size=step_size, cache_size=cache_size) for i,f in enumerate(tv_mask_meta_files)}
     
