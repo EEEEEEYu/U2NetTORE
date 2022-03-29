@@ -110,7 +110,7 @@ def shuffle_arr_by_block(arr, block_size:int, ramdom_offset:bool=True, seed:int=
 def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:int, 
                        test_characters:list=None, shuffle:bool=True, 
                        random_offset:bool=True, cache_size:int=1, 
-                       acc_time:float=0.02, step_size=0.02):
+                       acc_time:float=0.02, step_size=0.02, seed:int=2333):
     """ Process all the meta files into a single indexes array, 
         and return the merged indexes and reader dicts.
     Args:
@@ -120,7 +120,7 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
         test_characters: list, the name list of characters who are used in test session.
         shuffle: bool, Whether to shuffle the train and validation indexes.
         random_offset: bool, whether to use add a random offset(0~block_size).
-        cache_size:
+        seed: the random seed, used to guarantee the shuffled train val dataset split consistency. 
     """
     tore_meta_files = sorted(glob.glob(op.join(tore_dir, '**', 'meta.json')))
     mask_meta_files = []
@@ -151,7 +151,7 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
     
     tv_indexes = combine_meta_indexes(tv_tore_readers, base_number=base_number)
     if shuffle:
-        tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset)
+        tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset, seed=seed)
     print("Train and Val indexes shape: ", tv_indexes.shape)
 
     if test_characters is not None:

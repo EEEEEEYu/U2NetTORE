@@ -1,1 +1,1 @@
-from .model import ModelInteface
+from .unet_interface import ModelInteface
