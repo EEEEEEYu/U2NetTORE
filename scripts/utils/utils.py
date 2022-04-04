@@ -70,6 +70,7 @@ def build_working_tree(root=None, name=''):
     dt = now.strftime("%m-%d-%H-%M")
     name = f'{dt}_{name}' if len(name) != 0 else dt
     exp_path = get_folder(op.join(root, name))
+    print(f'[√] Now working under directory: {exp_path}')
     os.chdir(exp_path)
     # exp_path = os.getcwd()
     logger_dir = get_folder(op.join(exp_path, "tb_logs"))

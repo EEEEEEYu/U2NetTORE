@@ -16,4 +16,12 @@ class MaskSeqReader:
         return len(self.data.keys())
 
     def read_acc_frame(self, acc_frame_index: int):
-        return self.data.get(str(acc_frame_index))
+        # try:
+        frame = self.data.get(str(acc_frame_index))
+        # except Exception as e:
+        #     print("GG:", acc_frame_index, self.data_path)
+        #     print(str(e))
+        # else:
+        #     # print("OK:", acc_frame_index, self.data_path)
+        #     pass
+        return frame
