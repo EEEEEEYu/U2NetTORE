@@ -2,7 +2,6 @@ import inspect
 import torch
 import importlib
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim.lr_scheduler as lrs
 
 import pytorch_lightning as pl
@@ -76,7 +75,13 @@ class ModelInteface(pl.LightningModule):
             img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
         labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         ds = self(img)
-        return F.sigmoid(ds)
+        return torch.sigmoid(ds)
+
+    def predict_step(self, img, batch_idx=0):
+        if len(img.shape) > 4:
+            img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        ds = self(img)
+        return torch.sigmoid(ds)
 
     def on_validation_epoch_end(self):
         # Make the Progress Bar leave there

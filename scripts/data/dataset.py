@@ -52,8 +52,10 @@ class DataInterface(pl.LightningDataModule):
                 step_size=self.kwargs.step_size)
 
         if stage == 'fit' or stage is None:
-            train_indexes = tv_indexes[:int(0.8 * len(tv_indexes))]
-            val_indexes = tv_indexes[int(0.8 * len(tv_indexes)):]
+            tv_length = len(tv_indexes)
+            split_idx = int(tv_length*0.8) + (self.kwargs.seq_len - int(tv_length*0.8)%self.kwargs.seq_len)
+            train_indexes = tv_indexes[:split_idx]
+            val_indexes = tv_indexes[split_idx:]
             print("Length of train data:", len(train_indexes), '\nLength of val data: ', len(val_indexes))
             # TODO: Shuffle to False later
             self.trainset = self.instancialize(mode='train', shuffle=False,

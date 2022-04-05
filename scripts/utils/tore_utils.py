@@ -32,3 +32,15 @@ def to_float(x):
         return x.astype(float)
     else:
         return x.float()
+
+def ntore_to_redgreen(tore):
+    """ Make each layer of tore a rgb image in which red is the positive channel and green is negative.
+    Args:
+        tore: ndarray, whether 6 or 8 channels.
+    Return:
+        combined: the combined images.
+    """
+    _, h, w = tore.shape
+    tore = tore.reshape(2, -1, h, w)
+    combined = np.concatenate((tore, np.zeros((1, tore.shape[1],h,w))), axis=0).swapaxes(0,1)
+    return combined
