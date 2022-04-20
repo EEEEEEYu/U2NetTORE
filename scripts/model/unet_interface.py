@@ -54,7 +54,7 @@ class ModelInteface(pl.LightningModule):
         
         ds = self(img)
         loss = self.loss_function(ds, labels)
-        self.log('loss', loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log('loss', loss.cpu().detach().item(), on_step=True, on_epoch=True, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -67,7 +67,7 @@ class ModelInteface(pl.LightningModule):
         ds = self(img)
         loss = self.loss_function(ds, labels)
 
-        self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val_loss', loss.cpu().detach().item(), on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         img, labels = batch
