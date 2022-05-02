@@ -27,8 +27,9 @@ class Unet(nn.Module):
             self.conv_lstm = BiConvLSTM(64, 16, (3, 3), 1, batch_first=True)
             self.hid = 16
             # self.outc = OutConv(16, out_ch)
-            print("Using BiConvLSTM in U2Net.")
+            print("[√] Using BiConvLSTM in U2Net.")
         else:
+            print("[x] Not using BiConvLSTM in U2Net.")
             self.hid = 64
         self.outc = OutConv(self.hid, out_ch)
 

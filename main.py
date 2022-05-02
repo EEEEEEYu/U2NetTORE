@@ -113,7 +113,8 @@ if __name__ == '__main__':
     parser.add_argument('--base_number', default=128, type=int, help="The base number of each meta file data piece number.")
     parser.add_argument('--test_characters', type=str, nargs='*', default=['Miku'], help="Characters whos are only used in the test session.")
     parser.add_argument('--percentile', default=90, type=float, help="The percentile used to generate the extra band in ntore.")
-
+    parser.add_argument('--ori_tore', type=SBool, default=False, nargs='?', const=True, help="Use the original TORE instead, for comparison usage.")
+    
 
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)
@@ -128,6 +129,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.gpus = get_gpu_num(args.gpus)
+
+    if args.ori_tore:
+        args.in_ch=6
+
     # args.batch_size = args.batch_size // args.gpus
     # print(args.batch_size)
     # print(args.loop_read, args.use_convlstm, args.shuffle)

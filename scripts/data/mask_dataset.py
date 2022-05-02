@@ -7,7 +7,9 @@ import os.path as op
 from ..utils import get_pair_by_idx, get_batch_by_idx, gen_tore_plus
 
 class MaskDataset(Dataset):
-    def __init__(self, mode, shuffle, indexes, tore_readers, mask_readers, seq_len, percentile, accumulated):
+    def __init__(self, mode, shuffle, indexes, tore_readers, 
+                    mask_readers, seq_len, percentile, 
+                    accumulated, ori_tore=False):
         self.mode = mode
         self.shuffle = shuffle
         self.indexes = indexes
@@ -16,6 +18,9 @@ class MaskDataset(Dataset):
         self.seq_len = seq_len
         self.percentile = percentile
         self.accumulated = accumulated
+        self.ori_tore=ori_tore
+        if self.ori_tore:
+            print("[x] Using Original TORE Volume.")
 
     def block_shuffle(self, array, block_size):
         block_arr = [[] for _ in range(len(array) // block_size + 1)]
@@ -39,7 +44,8 @@ class MaskDataset(Dataset):
             mask = self.mask_readers[reader_idx].read_acc_frame(tore_idx+i)
             masks.append(torch.tensor(mask, dtype=torch.float32))
             ntore = (self.tore_readers[reader_idx].get_tore_by_index(tore_idx+i))
-            ntore = gen_tore_plus(ntore, percentile=self.percentile)
+            if not self.ori_tore:
+                ntore = gen_tore_plus(ntore, percentile=self.percentile)
             ntores.append(torch.tensor(ntore, dtype=torch.float32))
         ntores = torch.stack(ntores)
         masks = torch.stack(masks)
