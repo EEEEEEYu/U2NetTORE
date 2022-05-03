@@ -4,13 +4,13 @@ from .unet_parts import *
 from .convlstm import BiConvLSTM
 
 class Unet(nn.Module):
-    def __init__(self, in_ch=8, out_ch=1, bilinear=False, use_convlstm=False, seq_len=16):
+    def __init__(self, in_ch=8, seq_len=16, bilinear=False, use_convlstm=False):
         super(Unet, self).__init__()
         self.n_channels = in_ch
-        self.n_classes = out_ch
+        self.out_ch = seq_len
         self.bilinear = bilinear
         self.use_convlstm = use_convlstm
-        self.seq_len = seq_len
+        # self.seq_len = seq_len
 
         self.inc = DoubleConv(in_ch, 64)
         self.down1 = Down(64, 128)
@@ -22,18 +22,25 @@ class Unet(nn.Module):
         self.up2 = Up(512, 256 // factor, bilinear)
         self.up3 = Up(256, 128 // factor, bilinear)
         self.up4 = Up(128, 64, bilinear)
-        
-        if self.use_convlstm:
-            self.conv_lstm = BiConvLSTM(64, 16, (3, 3), 1, batch_first=True)
-            self.hid = 16
-            # self.outc = OutConv(16, out_ch)
-            print("[√] Using BiConvLSTM in U2Net.")
-        else:
-            print("[x] Not using BiConvLSTM in U2Net.")
-            self.hid = 64
-        self.outc = OutConv(self.hid, out_ch)
+        self.hid = 64
+
+        # if self.use_convlstm:
+        #     self.conv_lstm = BiConvLSTM(64, 16, (3, 3), 1, batch_first=True)
+        #     self.hid = 16
+        #     # self.outc = OutConv(16, out_ch)
+        #     print("[√] Using BiConvLSTM in U2Net.")
+        # else:
+        #     print("[x] Not using BiConvLSTM in U2Net.")
+        #     self.hid = 64
+        self.outc = OutConv(self.hid, self.out_ch)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(self.hid , self.out_ch)
+
+        print(f"Output channel number: {self.out_ch}")
 
     def forward(self, x):
+        # print(x.shape)
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
@@ -44,10 +51,13 @@ class Unet(nn.Module):
         x = self.up3(x, x2)
         x = self.up4(x, x1)
 
-        if self.use_convlstm:
-            x = x.reshape(x.shape[0]//self.seq_len, self.seq_len, *x.shape[1:])
-            # print(f'From inside: {x.shape}')
-            x = self.conv_lstm(x)[0].reshape(x.shape[0]*x.shape[1], self.hid, *x.shape[3:])
+        # if self.use_convlstm:
+        #     x = x.reshape(x.shape[0]//self.seq_len, self.seq_len, *x.shape[1:])
+        #     # print(f'From inside: {x.shape}')
+        #     x = self.conv_lstm(x)[0].reshape(x.shape[0]*x.shape[1], self.hid, *x.shape[3:])
 
-        logits = self.outc(x)
-        return logits.squeeze()
+        masks = self.outc(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        scores = self.fc(x)
+        return masks.squeeze(), scores

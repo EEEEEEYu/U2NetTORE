@@ -75,3 +75,33 @@ class OutConv(nn.Module):
 
     def forward(self, x):
         return self.conv(x)
+
+
+class ResidualBlock(nn.Module):
+    """
+    From https://raw.githubusercontent.com/anibali/margipose/
+    """
+
+    def __init__(self, chans, main_conv_in, shortcut_conv_in):
+        super().__init__()
+        assert main_conv_in.in_channels == shortcut_conv_in.in_channels
+        self.module = nn.Sequential(
+            main_conv_in,
+            nn.BatchNorm2d(chans),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(chans, chans, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(chans),
+            nn.ReLU(inplace=True),
+        )
+        self.shortcut = nn.Sequential(shortcut_conv_in, nn.BatchNorm2d(chans))
+
+    def forward(self, *inputs):
+        return self.module(inputs[0]) + self.shortcut(inputs[0])
+
+
+def _regular_block(in_chans, out_chans):
+    return ResidualBlock(
+        out_chans,
+        nn.Conv2d(in_chans, out_chans, kernel_size=3, padding=1, bias=False),
+        nn.Conv2d(in_chans, out_chans, kernel_size=1, bias=False),
+    )

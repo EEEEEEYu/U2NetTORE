@@ -22,8 +22,7 @@ def combine_meta_indexes(readers:dict, base_number:int=None):
     print(f'===== READER NUM: {len(readers)} =======')
     for i, reader in readers.items():
         total_num = reader.total_tore_count
-        if base_number is not None:
-            total_num = total_num - total_num % base_number
+        total_num -= (base_number-1)
         indexes.append(np.stack((i*np.ones(total_num, dtype=int), np.arange(total_num, dtype=int)), axis=-1))
     indexes = np.concatenate(indexes, axis=0)
     # print("Merged meta indexes shape: ", indexes.shape)
@@ -151,7 +150,9 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
     
     tv_indexes = combine_meta_indexes(tv_tore_readers, base_number=base_number)
     if shuffle:
-        tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset, seed=seed)
+        np.random.seed(seed)
+        np.random.shuffle(tv_indexes)
+        # tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset, seed=seed)
     print("Train and Val indexes shape: ", tv_indexes.shape)
 
     if test_characters is not None:
@@ -209,7 +210,9 @@ def process_meta_files_accumulated(mask_dir:str, tore_dir:str, block_size:int, b
     
     tv_indexes = combine_meta_indexes(tv_tore_readers, base_number=base_number)
     if shuffle:
-        tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset)
+        np.random.seed(1234)
+        tv_indexes = np.random.shuffle(tv_indexes)
+        # tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset)
     print("Train and Val indexes shape: ", tv_indexes.shape)
 
     if test_characters is not None:

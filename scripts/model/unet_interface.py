@@ -1,3 +1,4 @@
+from cProfile import label
 import inspect
 import torch
 import importlib
@@ -48,32 +49,57 @@ class ModelInteface(pl.LightningModule):
         img, labels = batch
         # print('From model interface 1:', img[0].shape)
 
-        img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        # img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
         # print('From model interface 2:', img[0].shape)
-        labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
+        # labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         
-        ds = self(img)
-        loss = self.loss_function(ds, labels)
+        masks, scores = self(img)
+        # loss = self.loss_function(masks, labels)
+        loss, pure_loss = self.hybrid_loss(masks, labels, scores)
         self.log('loss', loss.cpu().detach().item(), on_step=True, on_epoch=True, prog_bar=True)
+        self.log('pure_loss', pure_loss, on_step=True, on_epoch=True, prog_bar=True)
+        
         return loss
 
     def validation_step(self, batch, batch_idx):
         img, labels = batch
         # print('From model interface 1:', img[0].shape)
 
-        img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
-        labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
+        # img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
+        # labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         
-        ds = self(img)
-        loss = self.loss_function(ds, labels)
+        masks, scores = self(img)
+        # loss = self.loss_function(masks, labels)
+        loss, pure_loss = self.hybrid_loss(masks, labels, scores)
 
         self.log('val_loss', loss.cpu().detach().item(), on_step=False, on_epoch=True, prog_bar=True)
+        self.log('pure_val_loss', pure_loss, on_step=False, on_epoch=True, prog_bar=True)
+        
+    def hybrid_loss(self, masks, labels, scores):
+        mask_loss = nn.BCEWithLogitsLoss(reduction='mean')
+        score_loss = nn.L1Loss(reduce='mean')
+        masks_sig = torch.sigmoid(masks)
+        if self.hparams.separate_punish:
+            empty_mask = torch.where(labels==0)
+            non_empty_mask = torch.where(labels!=0)
+            loss  = mask_loss(masks[empty_mask], labels[empty_mask])
+            loss += 2*mask_loss(masks[non_empty_mask], labels[non_empty_mask])
+            pure_loss = mask_loss(masks, labels).cpu().detach().item()
+        else:
+            loss  = mask_loss(masks, labels)
+            pure_loss = loss.cpu().detach().item()
+
+        scores_gt = (masks_sig-labels).abs().mean(dim=(2,3))
+        loss += score_loss(scores, scores_gt)
+        if self.hparams.score_order_punish:
+            loss += 0.2*torch.mean(scores[:,:-1] - scores[:,1:])
+        return loss, pure_loss
 
     def test_step(self, batch, batch_idx):
         img, labels = batch
         if len(img.shape) > 4:
             img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
-        labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
+        # labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
         ds = self(img)
         return torch.sigmoid(ds)
 

@@ -88,7 +88,7 @@ if __name__ == '__main__':
     # Training Info
     parser.add_argument('--dataset', default='mask_dataset', type=str)
     parser.add_argument('--data_dir', default='ref/data', type=str)
-    parser.add_argument('--model_name', default='u2net', type=str)
+    parser.add_argument('--model_name', default='unet', type=str)
     parser.add_argument('--loss', default='bce', type=str, choices=('bce', 'mbce'))
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--no_augment', action='store_true')
@@ -99,6 +99,9 @@ if __name__ == '__main__':
     parser.add_argument("--use_convlstm", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--bilinear", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
+    parser.add_argument("--out_ch", type=int, default=16, nargs='?', const=True, help='Output channel number for unet.')
+    parser.add_argument("--separate_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
+    parser.add_argument("--score_order_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
     
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
@@ -110,12 +113,11 @@ if __name__ == '__main__':
     parser.add_argument("--step_size", default=0.02, type=float, help='Step size for mask readers.')
     parser.add_argument("--cache_size", default=1, type=int)
     parser.add_argument("--seq_len", default=16, type=int, help='The sequence length used in the convlstm.')
-    parser.add_argument('--base_number', default=128, type=int, help="The base number of each meta file data piece number.")
+    parser.add_argument('--base_number', default=16, type=int, help="The base number of each meta file data piece number.")
     parser.add_argument('--test_characters', type=str, nargs='*', default=['Miku'], help="Characters whos are only used in the test session.")
     parser.add_argument('--percentile', default=90, type=float, help="The percentile used to generate the extra band in ntore.")
-    parser.add_argument('--ori_tore', type=SBool, default=False, nargs='?', const=True, help="Use the original TORE instead, for comparison usage.")
+    parser.add_argument('--ori_tore', type=SBool, default=True, nargs='?', const=True, help="Use the original TORE instead, for comparison usage.")
     
-
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)
 
