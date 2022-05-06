@@ -1,6 +1,8 @@
 """ Full assembly of the parts to form the complete network """
 
-from .unet_parts import *
+import torch
+import torch.nn as nn
+from .unet_parts import DoubleConv, Down, Up, OutConv, _regular_block
 from .convlstm import BiConvLSTM
 
 class Unet(nn.Module):
@@ -34,8 +36,9 @@ class Unet(nn.Module):
         #     self.hid = 64
         self.outc = OutConv(self.hid, self.out_ch)
 
+        self.score_conv = _regular_block(self.hid, 8*self.hid)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(self.hid , self.out_ch)
+        self.fc = nn.Linear(self.hid*8 , self.out_ch)
 
         print(f"Output channel number: {self.out_ch}")
 
@@ -57,6 +60,8 @@ class Unet(nn.Module):
         #     x = self.conv_lstm(x)[0].reshape(x.shape[0]*x.shape[1], self.hid, *x.shape[3:])
 
         masks = self.outc(x)
+
+        x = self.score_conv(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         scores = self.fc(x)

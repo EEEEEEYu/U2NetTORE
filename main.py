@@ -24,7 +24,7 @@ def load_callbacks(checkpoint_dir=None):
     callbacks.append(plc.ModelCheckpoint(
         dirpath=checkpoint_dir,
         monitor='val_loss',
-        filename='best-{epoch:02d}-{val_loss:.6f}',
+        filename='best-{epoch:02d}-{val_loss:.3f}',
         save_top_k=1,
         mode='min',
         save_last=True
