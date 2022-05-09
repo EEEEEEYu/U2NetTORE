@@ -38,18 +38,18 @@ class MaskDataset(Dataset):
     def __getitem__(self, idx):
         reader_idx, tore_idx = self.indexes[idx]
         masks = []
-        ntore = (self.tore_readers[reader_idx].get_tore_by_index(tore_idx))
+        ntore = self.tore_readers.get_tore_by_index(reader_idx, tore_idx)
         ntore = torch.tensor(ntore).float()
         if not self.ori_tore:
             ntore = gen_tore_plus(ntore, percentile=self.percentile)
 
         for i in range(self.seq_len):
-            mask = self.mask_readers[reader_idx].read_acc_frame(tore_idx+i)
+            mask = self.mask_readers.read_acc_frame(reader_idx, tore_idx+i)
             masks.append(torch.tensor(mask, dtype=torch.float32))
 
         masks = torch.stack(masks)
-        self.tore_readers[reader_idx].clear_cache()
+        self.tore_readers.cleanup()
         if not self.accumulated:
-            self.mask_readers[reader_idx].clear_cache()
+            self.mask_readers.cleanup()
         
         return ntore, masks

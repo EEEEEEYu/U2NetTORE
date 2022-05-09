@@ -18,9 +18,6 @@ class DataInterface(pl.LightningDataModule):
         self.num_workers = num_workers
         self.dataset = dataset
         self.kwargs = dotdict(kwargs)
-        # self.kwargs = kwargs
-        # self.batch_size = kwargs['batch_size']
-        # self.gpus = kwargs['gpus']
         self.load_data_module()
         print('From Data interface:', self.kwargs.batch_size)
 
@@ -37,7 +34,8 @@ class DataInterface(pl.LightningDataModule):
                 test_characters=self.kwargs.test_characters,
                 shuffle=True, # in order to make train val split in random
                 cache_size=self.kwargs.cache_size,
-                acc_time=self.kwargs.acc_time)
+                acc_time=self.kwargs.acc_time,
+                cycle_views=self.kwargs.cycle_views)
         else:
             print('[×] Using raw mask files. Will generate the accumulated version on the fly.')
             tv_indexes, test_indexes, tv_tore_readers, tv_mask_readers, test_tore_readers, test_mask_readers = process_meta_files(
@@ -49,7 +47,8 @@ class DataInterface(pl.LightningDataModule):
                 shuffle=True, # in order to make train val split in random
                 cache_size=self.kwargs.cache_size,
                 acc_time=self.kwargs.acc_time,
-                step_size=self.kwargs.step_size)
+                step_size=self.kwargs.step_size,
+                cycle_views=self.kwargs.cycle_views)
 
         if stage == 'fit' or stage is None:
             tv_length = len(tv_indexes)
