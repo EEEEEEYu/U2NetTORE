@@ -100,8 +100,9 @@ if __name__ == '__main__':
     parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--bilinear", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
     parser.add_argument("--out_ch", type=int, default=16, nargs='?', const=True, help='Output channel number for unet.')
-    parser.add_argument("--separate_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
-    parser.add_argument("--score_order_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
+    parser.add_argument("--separate_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to calculate the loss for 0/1 pixels in mask GT separately.')
+    parser.add_argument("--score_order_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to add a loss to guarantee the predicted mask score order.')
+    parser.add_argument("--add_fb_loss", type=SBool, default=True, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
     
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)

@@ -64,5 +64,5 @@ class Unet(nn.Module):
         x = self.score_conv(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
-        scores = self.fc(x)
+        scores = torch.sigmoid(self.fc(x))
         return masks.squeeze(), scores

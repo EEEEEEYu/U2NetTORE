@@ -78,13 +78,13 @@ class DataInterface(pl.LightningDataModule):
                                                mask_readers=test_mask_readers)
 
     def train_dataloader(self):
-        return DataLoader(self.trainset, batch_size=self.kwargs.batch_size, num_workers=self.num_workers, shuffle=True)
+        return DataLoader(self.trainset, batch_size=self.kwargs.batch_size, num_workers=self.num_workers, shuffle=True, drop_last=True)
 
     def val_dataloader(self):
-        return DataLoader(self.valset, batch_size=self.kwargs.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.valset, batch_size=self.kwargs.batch_size, num_workers=self.num_workers, shuffle=False, drop_last=True)
 
     def test_dataloader(self):
-        return DataLoader(self.testset, batch_size=self.kwargs.batch_size, num_workers=self.num_workers, shuffle=False)
+        return DataLoader(self.testset, batch_size=self.kwargs.batch_size, num_workers=self.num_workers, shuffle=False, drop_last=True)
 
     def load_data_module(self):
         name = self.dataset

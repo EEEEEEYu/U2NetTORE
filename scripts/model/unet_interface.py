@@ -38,6 +38,9 @@ class ModelInteface(pl.LightningModule):
         if 'callbacks' in self.hparams.keys():
             del self.hparams['callbacks']
         print('Model hparams saved!')
+
+        if not self.hparams.add_fb_loss:
+            print('[x] Not adding first layer mask loss...')
         # print(self.hparams.keys())
         self.load_model()
         self.configure_loss()
@@ -72,8 +75,10 @@ class ModelInteface(pl.LightningModule):
         score_loss = nn.MSELoss(reduction='mean')
         masks_sig = torch.sigmoid(masks)
 
-        loss = mask_loss(masks[:,0:1], labels[:,0:1])
-        fb_loss = loss.cpu().detach().item()
+        fb_loss = mask_loss(masks[:,0:1], labels[:,0:1])
+        loss = fb_loss if self.hparams.add_fb_loss else 0
+        fb_loss = fb_loss.cpu().detach().item()
+
         if self.hparams.separate_punish:
             empty_mask = torch.where(labels==0)
             non_empty_mask = torch.where(labels!=0)
@@ -87,7 +92,7 @@ class ModelInteface(pl.LightningModule):
         scores_gt = 1 - (masks_sig.detach()-labels.detach()).abs().mean(dim=(2,3))
         loss += score_loss(scores, scores_gt)
         if self.hparams.score_order_punish:
-            loss += 0.1*torch.mean(scores[:,:-1] - scores[:,1:])
+            loss += 0.1*torch.mean(scores[:,1:]-scores[:,:-1])
         return loss, fb_loss, pure_loss
 
     def test_step(self, batch, batch_idx):
