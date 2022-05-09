@@ -18,9 +18,6 @@ class DataInterface(pl.LightningDataModule):
         self.num_workers = num_workers
         self.dataset = dataset
         self.kwargs = dotdict(kwargs)
-        # self.kwargs = kwargs
-        # self.batch_size = kwargs['batch_size']
-        # self.gpus = kwargs['gpus']
         self.load_data_module()
         print('From Data interface:', self.kwargs.batch_size)
 
