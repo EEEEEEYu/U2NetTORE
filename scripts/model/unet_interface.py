@@ -100,14 +100,16 @@ class ModelInteface(pl.LightningModule):
         if len(img.shape) > 4:
             img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
         # labels = labels.reshape(labels.shape[0] * labels.shape[1], *list(labels.shape[2:]))
-        ds = self(img)
-        return torch.sigmoid(ds)
+        masks, scores = self(img)
+        masks = torch.sigmoid(masks)
+        return masks, scores
 
     def predict_step(self, img, batch_idx=0):
         if len(img.shape) > 4:
             img = img.reshape((img.shape[0]* img.shape[1], *img.shape[2:]))
-        ds = self(img)
-        return torch.sigmoid(ds)
+        masks, scores = self(img)
+        masks = torch.sigmoid(masks)
+        return masks, scores
 
     def on_validation_epoch_end(self):
         # Make the Progress Bar leave there

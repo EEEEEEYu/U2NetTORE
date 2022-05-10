@@ -67,7 +67,7 @@ def build_working_tree(root=None, name=''):
         root = get_folder(op.join(os.getcwd(), 'lightning_logs'))
 
     now = datetime.now()
-    dt = now.strftime("%m-%d-%H-%M")
+    dt = now.strftime("%m-%d-%H-%M-%S")
     name = f'{dt}_{name}' if len(name) != 0 else dt
     exp_path = get_folder(op.join(root, name))
     print(f'[√] Now working under directory: {exp_path}')

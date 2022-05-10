@@ -174,7 +174,7 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
 def process_meta_files_accumulated(mask_dir:str, tore_dir:str, block_size:int, base_number:int, 
                        test_characters:list=None, shuffle:bool=True, 
                        random_offset:bool=True, cache_size:int=1, 
-                       acc_time:float=0.02, step_size=0.02):
+                       acc_time:float=0.02, step_size=0.02, cycle_views=False):
     """ Process all the meta files into a single indexes array, 
         and return the merged indexes and reader dicts.
     Args:
@@ -186,37 +186,41 @@ def process_meta_files_accumulated(mask_dir:str, tore_dir:str, block_size:int, b
         random_offset: bool, whether to use add a random offset(0~block_size).
         cache_size:
     """
-    tore_meta_files = sorted(glob.glob(op.join(tore_dir, '**', 'meta.json')))
-    mask_subroots = []
-    for tore_mf in tore_meta_files:
-        name = Path(tore_mf).parts[-2]
-        mask_subroots.append(op.join(mask_dir, name.split('_')[0], name.split('_')[1]+'_alpha'))
+    if 'synthetic' in tore_dir and cycle_views:
+        with open(str(Path(tore_dir).parent/'synthetic.yaml'), 'r') as f:
+            syn_data_pack = yaml.load(f, Loader=yaml.Loader)
 
-    # mask_meta_files = sorted(glob.glob(op.join(mask_dir, '**', 'meta.json')))
-    # assert len(tore_meta_files) == len(mask_meta_files)
-    
-    # Filter out the test meta files
-    if test_characters is not None:
-        test_tore_meta_files = [f for f in tore_meta_files if any([c in f for c in test_characters])]
-        test_mask_subroots = [f for f in mask_subroots if any([c in f for c in test_characters])]
-        
-        # Train and Validation meta files
-        tv_tore_meta_files = [f for f in tore_meta_files if f not in test_tore_meta_files]
-        tv_mask_subroots = [f for f in mask_subroots if f not in test_mask_subroots]
-
-        # tv_tore_meta_files = list(set(tore_meta_files) - set(test_tore_meta_files))
-        # tv_mask_meta_files = list(set(mask_meta_files) - set(test_mask_meta_files))
+        tv_tore_meta_files = [op.join(tore_dir, i, 'meta.json') for i in syn_data_pack['names_tv']]
+        test_tore_meta_files = [op.join(tore_dir, i, 'meta.json') for i in syn_data_pack['names_test']]
+        print('[√] Cycling camera views. Using 1/4 of the dataset.')
+        print(f"[Info] In total {len(tv_tore_meta_files)} TV meta files, {len(test_tore_meta_files)} test meta files.")
     else:
-        tv_tore_meta_files = tore_meta_files
-        tv_mask_subroots = mask_subroots
-        
+        tore_meta_files = sorted(glob.glob(op.join(tore_dir, '**', 'meta.json')))
+        # Filter out the test meta files
+        if test_characters is not None:
+            test_tore_meta_files = [f for f in tore_meta_files if any([c in f for c in test_characters])]
+            # Train and Validation meta files
+            tv_tore_meta_files = [f for f in tore_meta_files if f not in test_tore_meta_files]
+        else:
+            tv_tore_meta_files = tore_meta_files
+
+    test_mask_subroots = []
+    for tore_mf in test_tore_meta_files:
+        name = Path(tore_mf).parts[-2]
+        test_mask_subroots.append(op.join(mask_dir, name.split('_')[0], name.split('_')[1]+'_alpha'))
+
+    tv_mask_subroots = []
+    for tore_mf in tv_tore_meta_files:
+        name = Path(tore_mf).parts[-2]
+        tv_mask_subroots.append(op.join(mask_dir, name.split('_')[0], name.split('_')[1]+'_alpha'))
+      
     tv_tore_readers = {i:ToreSeqReader(f, cache_size=cache_size) for i,f in enumerate(tv_tore_meta_files)}
     tv_mask_readers = {i:MaskSeqReader(f, acc_time=acc_time) for i,f in enumerate(tv_mask_subroots)}
     
     tv_indexes = combine_meta_indexes(tv_tore_readers, base_number=base_number)
     if shuffle:
         np.random.seed(1234)
-        tv_indexes = np.random.shuffle(tv_indexes)
+        np.random.shuffle(tv_indexes)
         # tv_indexes = shuffle_arr_by_block(tv_indexes, block_size=block_size, ramdom_offset=random_offset)
     print("Train and Val indexes shape: ", tv_indexes.shape)
 

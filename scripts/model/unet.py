@@ -36,7 +36,10 @@ class Unet(nn.Module):
         #     self.hid = 64
         self.outc = OutConv(self.hid, self.out_ch)
 
-        self.score_conv = _regular_block(self.hid, 8*self.hid)
+        self.score_conv = nn.Sequential(*[
+            nn.Conv2d(self.hid, self.hid*4, kernel_size=1),
+            nn.Conv2d(self.hid*4, self.hid*8, kernel_size=1)
+            ])#_regular_block(self.hid, 8*self.hid)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(self.hid*8 , self.out_ch)
 
