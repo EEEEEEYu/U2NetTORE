@@ -71,26 +71,33 @@ class ModelInteface(pl.LightningModule):
         self.log('fb_val_loss', fb_loss, on_step=True, on_epoch=True, prog_bar=True)
 
     def hybrid_loss(self, masks, labels, scores):
-        mask_loss = nn.BCEWithLogitsLoss(reduction='mean')
+        w = torch.ones_like(labels)
+        if self.hparams.time_weighted:
+            w*=torch.linspace(1,0.2,self.hparams.seq_len).to(labels).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+
+        if self.hparams.separate_punish:
+            w[labels==0] *= 0.8
+            w[labels!=0] *= 1.2
+
+        mask_loss = nn.BCEWithLogitsLoss(reduction='mean', weight=w)
+        fb_mask_loss = nn.BCEWithLogitsLoss(reduction='mean')#, weight=w[:,0:1])
         score_loss = nn.MSELoss(reduction='mean')
         masks_sig = torch.sigmoid(masks)
 
-        fb_loss = mask_loss(masks[:,0:1], labels[:,0:1])
+        # The loss of the first mask
+        fb_loss = fb_mask_loss(masks[:,0:1], labels[:,0:1])
         loss = fb_loss if self.hparams.add_fb_loss else 0
         fb_loss = fb_loss.cpu().detach().item()
 
-        if self.hparams.separate_punish:
-            empty_mask = torch.where(labels==0)
-            non_empty_mask = torch.where(labels!=0)
-            loss += mask_loss(masks[empty_mask], labels[empty_mask])
-            loss += 2*mask_loss(masks[non_empty_mask], labels[non_empty_mask])
-            pure_loss = mask_loss(masks, labels).cpu().detach().item()
-        else:
-            loss += mask_loss(masks, labels)
-            pure_loss = loss.cpu().detach().item()
+        # The loss over all the mask bands
+        loss += mask_loss(masks, labels)
+        pure_loss = fb_mask_loss(masks, labels).cpu().detach().item()
 
+        # The loss for the confidence score
         scores_gt = 1 - (masks_sig.detach()-labels.detach()).abs().mean(dim=(2,3))
         loss += score_loss(scores, scores_gt)
+
+        # The loss for the order of the confidence score
         if self.hparams.score_order_punish:
             loss += 0.1*torch.mean(scores[:,1:]-scores[:,:-1])
         return loss, fb_loss, pure_loss

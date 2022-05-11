@@ -49,8 +49,11 @@ def main(args):
     if load_path is None:
         model = ModelInteface(**vars(args))
     else:
-        model = ModelInteface(**vars(args))
-        args.resume_from_checkpoint = load_path
+        if args.load_weights_only:
+            model = ModelInteface.load_from_checkpoint(load_path, **vars(args))
+        else:
+            model = ModelInteface(**vars(args))
+            args.resume_from_checkpoint = load_path
 
     if args.use_profiler:
         # log_profiler = os.path.join(os.getcwd(), "profile.txt")
@@ -84,6 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--load_dir', default=None, type=str)
     parser.add_argument('--load_ver', default=None, type=str)
     parser.add_argument('--load_v_num', default=None, type=int)
+    parser.add_argument('--load_weights_only', type=SBool, default=False, nargs='?', const=True)
 
     # Training Info
     parser.add_argument('--dataset', default='mask_dataset', type=str)
@@ -102,7 +106,8 @@ if __name__ == '__main__':
     parser.add_argument("--out_ch", type=int, default=16, nargs='?', const=True, help='Output channel number for unet.')
     parser.add_argument("--separate_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to calculate the loss for 0/1 pixels in mask GT separately.')
     parser.add_argument("--score_order_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to add a loss to guarantee the predicted mask score order.')
-    parser.add_argument("--add_fb_loss", type=SBool, default=True, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
+    parser.add_argument("--add_fb_loss", type=SBool, default=False, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
+    parser.add_argument("--time_weighted", type=SBool, default=False, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
     
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
