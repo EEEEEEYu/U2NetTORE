@@ -1,4 +1,3 @@
-from cProfile import label
 import inspect
 import torch
 import importlib
@@ -6,6 +5,7 @@ import torch.nn as nn
 import torch.optim.lr_scheduler as lrs
 
 import pytorch_lightning as pl
+from functools import partial
 
 bce_loss = nn.BCEWithLogitsLoss(reduction='mean')
 
@@ -79,7 +79,8 @@ class ModelInteface(pl.LightningModule):
             w[labels==0] *= 0.8
             w[labels!=0] *= 1.2
 
-        mask_loss = nn.BCEWithLogitsLoss(reduction='mean', weight=w)
+        # mask_loss = nn.BCEWithLogitsLoss(reduction='mean', weight=w)
+        mask_loss = partial(element_weighted_loss, weights=w)
         fb_mask_loss = nn.BCEWithLogitsLoss(reduction='mean')#, weight=w[:,0:1])
         score_loss = nn.MSELoss(reduction='mean')
         masks_sig = torch.sigmoid(masks)
@@ -181,3 +182,9 @@ class ModelInteface(pl.LightningModule):
                 args1[arg] = getattr(self.hparams, arg)
         args1.update(other_args)
         return Model(**args1)
+
+def element_weighted_loss(pred, gt, weights):
+    criterion = torch.nn.BCEWithLogitsLoss(reduction='none')
+    loss = criterion(pred, gt)
+    loss = loss * weights
+    return loss.sum() / weights.sum()
