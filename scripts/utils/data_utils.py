@@ -110,7 +110,8 @@ def shuffle_arr_by_block(arr, block_size:int, ramdom_offset:bool=True, seed:int=
 def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:int, 
                        test_characters:list=None, shuffle:bool=True, 
                        random_offset:bool=True, cache_size:int=1, 
-                       acc_time:float=0.02, step_size=0.02, seed:int=2333, cycle_views=False):
+                       acc_time:float=0.02, step_size=0.02, seed:int=2333, 
+                       cycle_views=False, rand_test=False):
     """ Process all the meta files into a single indexes array, 
         and return the merged indexes and reader dicts.
     Args:
@@ -123,7 +124,8 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
         seed: the random seed, used to guarantee the shuffled train val dataset split consistency. 
     """
     if 'synthetic' in tore_dir and cycle_views:
-        with open(str(Path(tore_dir).parent/'synthetic.yaml'), 'r') as f:
+        filename = 'synthetic_randt.yaml' if rand_test else 'synthetic.yaml'
+        with open(str(Path(tore_dir).parent/filename), 'r') as f:
             syn_data_pack = yaml.load(f, Loader=yaml.Loader)
 
         tv_tore_meta_files = [op.join(tore_dir, i, 'meta.json') for i in syn_data_pack['names_tv']]
@@ -174,7 +176,8 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
 def process_meta_files_accumulated(mask_dir:str, tore_dir:str, block_size:int, base_number:int, 
                        test_characters:list=None, shuffle:bool=True, 
                        random_offset:bool=True, cache_size:int=1, 
-                       acc_time:float=0.02, step_size=0.02, cycle_views=False):
+                       acc_time:float=0.02, step_size=0.02, cycle_views=False,
+                       rand_test=False):
     """ Process all the meta files into a single indexes array, 
         and return the merged indexes and reader dicts.
     Args:
@@ -187,7 +190,8 @@ def process_meta_files_accumulated(mask_dir:str, tore_dir:str, block_size:int, b
         cache_size:
     """
     if 'synthetic' in tore_dir and cycle_views:
-        with open(str(Path(tore_dir).parent/'synthetic.yaml'), 'r') as f:
+        filename = 'synthetic_randt.yaml' if rand_test else 'synthetic.yaml'
+        with open(str(Path(tore_dir).parent/filename), 'r') as f:
             syn_data_pack = yaml.load(f, Loader=yaml.Loader)
 
         tv_tore_meta_files = [op.join(tore_dir, i, 'meta.json') for i in syn_data_pack['names_tv']]

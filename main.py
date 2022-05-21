@@ -124,6 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('--percentile', default=90, type=float, help="The percentile used to generate the extra band in ntore.")
     parser.add_argument('--ori_tore', type=SBool, default=True, nargs='?', const=True, help="Use the original TORE instead, for comparison usage.")
     parser.add_argument('--cycle_views', type=SBool, default=False, nargs='?', const=True, help="Cycle the camera views. If applied, the total data size will be cut to 1/4.")
+    parser.add_argument('--rand_test', type=SBool, default=False, nargs='?', const=True, help="Use randomly selected test cases.")
     
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)
