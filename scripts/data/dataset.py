@@ -35,7 +35,8 @@ class DataInterface(pl.LightningDataModule):
                 shuffle=True, # in order to make train val split in random
                 cache_size=self.kwargs.cache_size,
                 acc_time=self.kwargs.acc_time,
-                cycle_views=self.kwargs.cycle_views)
+                cycle_views=self.kwargs.cycle_views,
+                rand_test=self.kwargs.rand_test)
         else:
             print('[×] Using raw mask files. Will generate the accumulated version on the fly.')
             tv_indexes, test_indexes, tv_tore_readers, tv_mask_readers, test_tore_readers, test_mask_readers = process_meta_files(
@@ -48,7 +49,8 @@ class DataInterface(pl.LightningDataModule):
                 cache_size=self.kwargs.cache_size,
                 acc_time=self.kwargs.acc_time,
                 step_size=self.kwargs.step_size,
-                cycle_views=self.kwargs.cycle_views)
+                cycle_views=self.kwargs.cycle_views,
+                rand_test=self.kwargs.rand_test)
 
         if stage == 'fit' or stage is None:
             tv_length = len(tv_indexes)

@@ -9,7 +9,7 @@ from ..utils import get_pair_by_idx, get_batch_by_idx, gen_tore_plus
 class MaskDataset(Dataset):
     def __init__(self, mode, shuffle, indexes, tore_readers, 
                     mask_readers, seq_len, percentile, 
-                    accumulated, ori_tore=False):
+                    accumulated, ori_tore=False, partial_dataset=1):
         self.mode = mode
         self.shuffle = shuffle
         self.indexes = indexes
@@ -21,6 +21,8 @@ class MaskDataset(Dataset):
         self.ori_tore=ori_tore
         if self.ori_tore:
             print("[x] Using Original TORE Volume.")
+        self.partial_dataset = partial_dataset if mode != 'test' else 1
+        print(f'{self.partial_dataset*100}% of the dataset is used.')
 
     def block_shuffle(self, array, block_size):
         block_arr = [[] for _ in range(len(array) // block_size + 1)]
@@ -33,7 +35,8 @@ class MaskDataset(Dataset):
     # training set: 80% val/testing set: 10%
     # We always assume that instances are the same number with labels
     def __len__(self):
-        return len(self.indexes)
+        return int(self.partial_dataset*len(self.indexes))
+        # return len(self.indexes)
 
     def __getitem__(self, idx):
         reader_idx, tore_idx = self.indexes[idx]

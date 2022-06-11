@@ -125,6 +125,7 @@ def process_meta_files(mask_dir:str, tore_dir:str, block_size:int, base_number:i
     """
     if 'synthetic' in tore_dir and cycle_views:
         filename = 'synthetic_randt.yaml' if rand_test else 'synthetic.yaml'
+        print(f'[INFO] Using {filename} as train-test splition guidance.')
         with open(str(Path(tore_dir).parent/filename), 'r') as f:
             syn_data_pack = yaml.load(f, Loader=yaml.Loader)
 

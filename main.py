@@ -104,11 +104,14 @@ if __name__ == '__main__':
     parser.add_argument("--use_dilated_conv", type=SBool, default=True, nargs='?', const=True)
     parser.add_argument("--bilinear", type=SBool, default=False, nargs='?', const=True, help='Whether to use bilinear upsampling or transposed conv in unet.')
     parser.add_argument("--out_ch", type=int, default=16, nargs='?', const=True, help='Output channel number for unet.')
+    parser.add_argument("--base_dim", type=int, default=16, nargs='?', const=True, help='The base dimension number for unet.')
     parser.add_argument("--separate_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to calculate the loss for 0/1 pixels in mask GT separately.')
     parser.add_argument("--score_order_punish", type=SBool, default=False, nargs='?', const=True, help='Whether to add a loss to guarantee the predicted mask score order.')
     parser.add_argument("--add_fb_loss", type=SBool, default=False, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
     parser.add_argument("--time_weighted", type=SBool, default=False, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
-    
+    parser.add_argument('--teacher_path', default=None, type=str, help="Pretrained teacher network checkpoint path.")
+    parser.add_argument('--teacher_alpha', default=0.5, type=float, help="The weights from teacher network loss.")
+
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)
     parser.add_argument("--mask_dir", default="", type=str)
@@ -125,6 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--ori_tore', type=SBool, default=True, nargs='?', const=True, help="Use the original TORE instead, for comparison usage.")
     parser.add_argument('--cycle_views', type=SBool, default=False, nargs='?', const=True, help="Cycle the camera views. If applied, the total data size will be cut to 1/4.")
     parser.add_argument('--rand_test', type=SBool, default=False, nargs='?', const=True, help="Use randomly selected test cases.")
+    parser.add_argument('--partial_dataset', default=1.0, type=float, help="The percentage of data that is going to be use in training and validation.")
     
     # Add pytorch lightning's args to parser as a group.
     parser = Trainer.add_argparse_args(parser)

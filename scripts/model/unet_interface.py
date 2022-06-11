@@ -45,6 +45,16 @@ class ModelInteface(pl.LightningModule):
         self.load_model()
         self.configure_loss()
 
+        self.fb_mask_loss = nn.BCEWithLogitsLoss(reduction='mean')#, weight=w[:,0:1])
+        self.score_loss = nn.MSELoss(reduction='mean')
+
+        if 'teacher_path' in self.hparams.keys() and self.hparams.teacher_path is not None:
+            self.using_teacher = True
+            self.teacher_net = ModelInteface.load_from_checkpoint(self.hparams.teacher_path)
+            self.teacher_net.eval()
+        else: 
+            self.using_teacher = False
+
     def forward(self, img):
         return self.model(img)
 
@@ -54,6 +64,8 @@ class ModelInteface(pl.LightningModule):
         masks, scores = self(img)
         # loss = self.loss_function(masks, labels)
         loss, fb_loss, pure_loss = self.hybrid_loss(masks, labels, scores)
+        if self.using_teacher:
+            loss += self.hparams.teacher_alpha * self.teacher_student_loss(img, masks, scores)
         self.log('loss', loss.cpu().detach().item(), on_step=True, on_epoch=True, prog_bar=True)
         self.log('pure_loss', pure_loss, on_step=True, on_epoch=True, prog_bar=False)
         self.log('fb_loss', fb_loss, on_step=True, on_epoch=True, prog_bar=True)
@@ -81,27 +93,33 @@ class ModelInteface(pl.LightningModule):
 
         # mask_loss = nn.BCEWithLogitsLoss(reduction='mean', weight=w)
         mask_loss = partial(element_weighted_loss, weights=w)
-        fb_mask_loss = nn.BCEWithLogitsLoss(reduction='mean')#, weight=w[:,0:1])
-        score_loss = nn.MSELoss(reduction='mean')
+        # fb_mask_loss = nn.BCEWithLogitsLoss(reduction='mean')#, weight=w[:,0:1])
+        # score_loss = nn.MSELoss(reduction='mean')
         masks_sig = torch.sigmoid(masks)
 
         # The loss of the first mask
-        fb_loss = fb_mask_loss(masks[:,0:1], labels[:,0:1])
+        fb_loss = self.fb_mask_loss(masks[:,0:1], labels[:,0:1])
         loss = fb_loss if self.hparams.add_fb_loss else 0
         fb_loss = fb_loss.cpu().detach().item()
 
         # The loss over all the mask bands
         loss += mask_loss(masks, labels)
-        pure_loss = fb_mask_loss(masks, labels).cpu().detach().item()
+        pure_loss = self.fb_mask_loss(masks, labels).cpu().detach().item()
 
         # The loss for the confidence score
         scores_gt = 1 - (masks_sig.detach()-labels.detach()).abs().mean(dim=(2,3))
-        loss += score_loss(scores, scores_gt)
+        loss += self.score_loss(scores, scores_gt)
 
         # The loss for the order of the confidence score
         if self.hparams.score_order_punish:
             loss += 0.1*torch.mean(scores[:,1:]-scores[:,:-1])
         return loss, fb_loss, pure_loss
+
+    def teacher_student_loss(self, img, masks, scores):
+        teacher_masks, teacher_scores = self.teacher_net(img)
+        ts_loss = self.score_loss(masks, teacher_masks)
+        ts_loss += self.score_loss(scores, teacher_scores)
+        return ts_loss
 
     def test_step(self, batch, batch_idx):
         img, labels = batch
