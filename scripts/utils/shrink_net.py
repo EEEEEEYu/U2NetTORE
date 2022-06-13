@@ -21,7 +21,8 @@ def main(args):
 
     model_ori = ModelInteface.load_from_checkpoint(model_ori_path)
     print('[√] Original model loaded.')
-    torch.save(model_ori.model, model_new_path)
+    model_jit = torch.jit.script(model_ori.model)
+    model_jit.save(model_new_path)
     print('[√] Done.')
 
 if __name__ == '__main__':

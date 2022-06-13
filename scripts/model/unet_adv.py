@@ -3,7 +3,6 @@
 import torch
 import torch.nn as nn
 from .unet_parts import DoubleConv, Down, Up, OutConv, _regular_block
-from .convlstm import BiConvLSTM
 
 class UnetAdv(nn.Module):
     def __init__(self, in_ch=8, seq_len=16, bilinear=False):

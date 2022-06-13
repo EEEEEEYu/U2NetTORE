@@ -95,8 +95,11 @@ class ResidualBlock(nn.Module):
         )
         self.shortcut = nn.Sequential(shortcut_conv_in, nn.BatchNorm2d(chans))
 
-    def forward(self, *inputs):
-        return self.module(inputs[0]) + self.shortcut(inputs[0])
+    # def forward(self, *inputs):
+    #     return self.module(inputs[0]) + self.shortcut(inputs[0])
+
+    def forward(self, inputs):
+        return self.module(inputs) + self.shortcut(inputs)
 
 
 def _regular_block(in_chans, out_chans):
