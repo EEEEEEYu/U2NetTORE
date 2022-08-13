@@ -55,6 +55,8 @@ class ModelInteface(pl.LightningModule):
         else: 
             self.using_teacher = False
 
+        print("Loss Alpha: ", self.hparams.loss_alpha)
+
     def forward(self, img):
         return self.model(img)
 
