@@ -7,7 +7,7 @@ import os.path as op
 sys.path.append('..')
 from model.unet_interface import ModelInteface
 
-def get_model_path(date, root='/mnt/nfs/scratch1/zhongyangzha/DVS_HPE/dvs-hpe-light/lightning_logs', best=True):
+def get_model_path(date, root='/gypsum/scratch1/zhongyangzha/DVS_HPE/dvs-hpe-light/lightning_logs', best=True):
     model_subdir = op.join(root, date, 'checkpoints')
     if best:
         model_path = glob.glob(op.join(model_subdir, 'best*'))[0]
@@ -27,7 +27,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r', '--root', type=str, default='/mnt/nfs/scratch1/zhongyangzha/DVS_HPE/U2NetTORE/lightning_logs/', help='root folder of logs.')
+    parser.add_argument('-r', '--root', type=str, default='/gypsum/scratch1/zhongyangzha/DVS_HPE/U2NetTORE/lightning_logs/', help='root folder of logs.')
     parser.add_argument('-d', '--datetime', type=str, default='', help='date time string for the folder going to be processed.')
     parser.add_argument('-b', '--best', action='store_true', help='Use the best model.')
     args = parser.parse_args()
