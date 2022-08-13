@@ -111,6 +111,7 @@ if __name__ == '__main__':
     parser.add_argument("--time_weighted", type=SBool, default=False, nargs='?', const=True, help='Whether to add a first layer mask(corresponding to the input frame) loss.')
     parser.add_argument('--teacher_path', default=None, type=str, help="Pretrained teacher network checkpoint path.")
     parser.add_argument('--teacher_alpha', default=0.5, type=float, help="The weights from teacher network loss.")
+    parser.add_argument('--loss_alpha', default=1, type=float, help='The parameter multiplied on score loss.')
 
     # Data Info
     # parser.add_argument("--img_dir", default='dummy_data/frames', type=str)

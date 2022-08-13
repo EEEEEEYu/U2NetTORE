@@ -108,11 +108,11 @@ class ModelInteface(pl.LightningModule):
 
         # The loss for the confidence score
         scores_gt = 1 - (masks_sig.detach()-labels.detach()).abs().mean(dim=(2,3))
-        loss += self.score_loss(scores, scores_gt)
+        loss += self.hparams.loss_alpha * self.score_loss(scores, scores_gt)
 
         # The loss for the order of the confidence score
         if self.hparams.score_order_punish:
-            loss += 0.1*torch.mean(scores[:,1:]-scores[:,:-1])
+            loss += self.hparams.loss_alpha * 0.1*torch.mean(scores[:,1:]-scores[:,:-1])
         return loss, fb_loss, pure_loss
 
     def teacher_student_loss(self, img, masks, scores):
